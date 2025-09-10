@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Schedule</title>
+  <link rel="stylesheet" href="schedule.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <img src="logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li>Home</li>
+        <li>Explore</li>
+        <li>Live</li>
+        <li>Trends</li>
+        <li>Notifications</li>
+      </ul>
+    </div>
+    <div class="avatar"></div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">Ramesh Rajpurohit</p>
+          <p class="handle">@rameshraj2118</p>
+        </div>
+        <nav>
+          <ul>
+            <a href="home.html"><li><i class="fa-solid fa-chart-simple"></i>Analytics</li></a>
+            <li><i class="fa-solid fa-plus"></i> Posts</li>
+            <li class="active"><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+            <li><i class="fa-solid fa-bullhorn"></i> Ads</li>
+            <a href="inbox.html"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
+            <li><i class="fa-solid fa-gear"></i> Settings</li>
+          </ul>
+        </nav>
+      </div>
+      <button class="logout-btn">Log Out</button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Schedule</h1>
+        <p class="subtext">Calendar and Tasks</p>
+
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="active">Instagram</button>
+          <button>YouTube</button>
+          <button>Facebook</button>
+          <button>Twitter</button>
+        </div>
+
+        <!-- TASKS & CALENDAR -->
+        <div class="schedule-container">
+          <!-- Tasks -->
+          <div class="tasks-box">
+            <h3>Tasks</h3>
+            <ul class="task-list">
+              <li><input type="checkbox"> Post vlog</li>
+              <li><input type="checkbox"> Write script</li>
+              <li><input type="checkbox"> Read research papaers</li>
+              <li><input type="checkbox"> Go live at 8 PM</li>
+              <li><input type="checkbox"> Edit Video</li>
+              <li><input type="checkbox"> Meditate</li>
+              <li><input type="checkbox"> Call manager</li>
+              <li><input type="checkbox"> Meeting at 10 AM</li>
+            </ul>
+          </div>
+
+          <!-- Calendar -->
+          <div class="calendar-box">
+            <h3>Calendar</h3>
+            <div class="calendar-header">
+              <button class="cal-btn"><i class="fa-solid fa-chevron-left"></i></button>
+              <span>January 2025</span>
+              <button class="cal-btn"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <table class="calendar">
+              <thead>
+                <tr>
+                  <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>30</td><td>31</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+                <tr><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+                <tr><td>13</td><td>14</td><td>15</td><td class="highlight">16</td><td>17</td><td class="red">18</td><td>19</td></tr>
+                <tr><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td></tr>
+                <tr><td>27</td><td>28</td><td>29</td><td>30</td><td>31</td><td>1</td><td>2</td></tr>
+              </tbody>
+            </table>
+
+            <p class="meeting-note">Meeting : 18/01/2025 at 10 AM</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Settings</title>
+  <link rel="stylesheet" href="settings.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <img src="logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li>Home</li>
+        <li>Explore</li>
+        <li>Live</li>
+        <li>Trends</li>
+        <li>Notifications</li>
+      </ul>
+    </div>
+    <div class="avatar"></div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">Ramesh Rajpurohit</p>
+          <p class="handle">@rameshraj2118</p>
+        </div>
+        <nav>
+          <ul>
+            <li><i class="fa-solid fa-chart-simple"></i> Analytics</li>
+            <li><i class="fa-solid fa-plus"></i> Posts</li>
+            <li><i class="fa-solid fa-calendar-days"></i> Schedule</li>
+            <li><i class="fa-solid fa-bullhorn"></i> Ads</li>
+            <li><i class="fa-regular fa-comment-dots"></i> Inbox</li>
+            <li class="active"><i class="fa-solid fa-gear"></i> Settings</li>
+          </ul>
+        </nav>
+      </div>
+      <button class="logout-btn">Log Out</button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Settings</h1>
+        <p class="subtext">Manage your account and preferences</p>
+
+        <!-- Search bar -->
+        <div class="search-bar">
+          <input type="text" placeholder="Search settings...">
+          <i class="fa-solid fa-search"></i>
+        </div>
+
+        <!-- SETTINGS GROUPS -->
+        <div class="settings-container">
+          <!-- General -->
+          <div class="settings-group">
+            <h3>General</h3>
+            <div class="setting-item">
+              <span>Appearance</span>
+              <button class="option-btn">Dark</button>
+            </div>
+            <div class="setting-item">
+              <span>Language</span>
+              <button class="option-btn">English</button>
+            </div>
+            <div class="setting-item">
+              <span>Font Size</span>
+              <button class="option-btn">Medium</button>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="settings-group">
+            <h3>Notifications</h3>
+            <div class="setting-item">
+              <span>Email Notifications</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <span>Push Notifications</span>
+              <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <span>In-App Notifications</span>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Privacy -->
+          <div class="settings-group">
+            <h3>Privacy</h3>
+            <div class="setting-item">
+              <span>Profile Visibility</span>
+              <button class="option-btn">Friends Only</button>
+            </div>
+            <div class="setting-item">
+              <span>Direct Messages</span>
+              <button class="option-btn">Everyone</button>
+            </div>
+            <div class="setting-item">
+              <span>Blocked Users</span>
+              <button class="option-btn">Manage</button>
+            </div>
+          </div>
+
+          <!-- Account -->
+          <div class="settings-group">
+            <h3>Account</h3>
+            <div class="setting-item">
+              <span>Account Information</span>
+              <button class="option-btn">Edit</button>
+            </div>
+            <div class="setting-item">
+              <span>Change Password</span>
+              <button class="option-btn">Change</button>
+            </div>
+            <div class="setting-item">
+              <span>Deactivate/Delete Account</span>
+              <button class="option-btn">Manage</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

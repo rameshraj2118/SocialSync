@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Ads</title>
+  <link rel="stylesheet" href="ads.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <img src="logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li>Home</li>
+        <li>Explore</li>
+        <li>Live</li>
+        <li>Trends</li>
+        <li>Notifications</li>
+      </ul>
+    </div>
+    <div class="avatar"></div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">Ramesh Rajpurohit</p>
+          <p class="handle">@rameshraj2118</p>
+        </div>
+        <nav>
+          <ul>
+            <li><i class="fa-solid fa-chart-simple"></i> Analytics</li>
+            <li><i class="fa-solid fa-plus"></i> Posts</li>
+            <li><i class="fa-solid fa-calendar-days"></i> Schedule</li>
+            <li class="active"><i class="fa-solid fa-bullhorn"></i> Ads</li>
+            <li><i class="fa-regular fa-comment-dots"></i> Inbox</li>
+            <li><i class="fa-solid fa-gear"></i> Settings</li>
+          </ul>
+        </nav>
+      </div>
+      <button class="logout-btn">Log Out</button>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Ads</h1>
+        <p class="subtext">Create and manage ads</p>
+
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="active">Instagram</button>
+          <button>YouTube</button>
+          <button>Facebook</button>
+          <button>Twitter</button>
+        </div>
+
+        <!-- CREATE AN AD -->
+        <div class="ads-section">
+          <h3>Create an ad</h3>
+          <div class="ad-card">
+            <div class="ad-text">
+              <h4>Boost a post</h4>
+              <p>Turn your best-performing posts into ads to reach more people.</p>
+              <button class="ad-btn">Boost a post</button>
+            </div>
+            <img src="https://i.ibb.co/Nyb1xkM/plant1.png" alt="Boost Ad">
+          </div>
+
+          <div class="ad-card">
+            <div class="ad-text">
+              <h4>New ad</h4>
+              <p>Design an ad from scratch to promote your business, product, or service.</p>
+              <button class="ad-btn">Create an ad</button>
+            </div>
+            <img src="https://i.ibb.co/0VdPxvF/plant2.png" alt="New Ad">
+          </div>
+        </div>
+
+        <!-- MANAGE ADS -->
+        <div class="ads-section">
+          <h3>Manage ads</h3>
+          <div class="manage-ad">
+            <img src="https://i.ibb.co/Nyb1xkM/plant1.png" alt="Ad Campaign 1">
+            <div class="manage-text">
+              <p class="title">Ad Campaign 1</p>
+              <p class="status running">Running</p>
+            </div>
+            <p class="budget">Budget: $500</p>
+          </div>
+
+          <div class="manage-ad">
+            <img src="https://i.ibb.co/0VdPxvF/plant2.png" alt="Ad Campaign 2">
+            <div class="manage-text">
+              <p class="title">Ad Campaign 2</p>
+              <p class="status paused">Paused</p>
+            </div>
+            <p class="budget">Budget: $300</p>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SocialSync Login</title>
+  <link rel="stylesheet" href="signup.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">
+      <!-- Placeholder for logo -->
+      <img src="logo.png" alt="SocialSync Logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About us</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Contact</a></li>
+        <li><a href="login.html" class="login">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Section -->
+  <main class="container">
+    <!-- Left Section (Social Mesh Image) -->
+    <div class="left">
+      <img src="social.png" alt="Social Mesh Graphic" class="mesh-image">
+    </div>
+
+    <!-- Right Section (Login Form) -->
+    <div class="right">
+      <h2>Create you account</h2>
+      <form>
+        <label>Email</label>
+        <input type="email" placeholder="Enter your email" required />
+
+        <label>Password</label>
+        <div class="password-field">
+          <input type="password" placeholder="Enter your password" required />
+          <span class="eye-icon">👁</span>
+        </div>
+        <label>Confirm Password</label>
+        <div class="password-field">
+        <input type="password" placeholder="Re-enter your password" />
+          <span class="eye-icon">👁</span>
+        </div>
+        <button type="submit" class="signup-btn">Sign up</button>
+        <p class="login-text">
+          Already have an account ? <a href="login.html">Log in</a>
+        </p>
+        <div class="divider">────────  or Sign up with  ────────</div>
+        <div class="social-login">
+         <button class="social-btn"><i class="fab fa-google"></i> Google</button>
+         <button class="social-btn"><i class="fab fa-apple"></i> Apple</button>
+         <button class="social-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

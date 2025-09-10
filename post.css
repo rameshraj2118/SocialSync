@@ -1,0 +1,53 @@
+/* Import base dashboard styles */
+@import url('home.css');
+
+/* Posts Page */
+.posts-section {
+  margin-bottom: 30px;
+}
+.posts-section h3{
+  padding-bottom: 14px;
+}
+
+.posts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  color: white;
+}
+
+.posts-header h3 {
+  font-size: 1.2rem;
+}
+
+.new-btn {
+  background-color: #1f6feb;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.posts-grid img {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #2d333b;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.posts-grid img:hover {
+  transform: scale(1.05);
+  border-color: #1f6feb;
+}

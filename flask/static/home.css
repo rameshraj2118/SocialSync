@@ -1,0 +1,280 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: #0d1117;
+  color: white;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* HEADER (fixed full width) */
+.top-nav {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #15222E;
+  padding: 20px 30px;
+  box-shadow: inset 0px -3px 10px 0px rgb(0,0,0,0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  font-size: large;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 1rem;
+  transition: 0.3s;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo img {
+  width: auto;
+  height: 2.5rem;
+}
+
+.menu {
+  display: flex;
+  justify-content: center;
+  gap: 110px;
+  list-style: none;
+  transform: translateX(80px);
+}
+
+.menu li {
+  cursor: pointer;
+  color: #c9d1d9;
+  font-weight: 500;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background-color: gray;
+  border-radius: 50%;
+  transform: translateX(-50px);
+}
+
+/* LAYOUT */
+.layout {
+  display: flex;
+  flex: 1;
+  margin-top: 80px; /* push layout below header */
+  height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+/* SIDEBAR below header */
+.sidebar {
+  width: 250px;
+  background-color: #131d26a4;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow-y: auto;
+  position: sticky;
+  top: 80px;
+  border-right: 1.17px solid #3d3d3d;
+}
+
+.user-info {
+  margin-bottom: 30px;
+  margin-top: 15px;
+  margin-left: 12px;
+}
+
+.username {
+  font-weight: bold;
+}
+
+.handle {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: gray;
+}
+
+/* SIDEBAR NAV ITEMS WITH ICONS */
+nav ul {
+  list-style: none;
+}
+
+nav ul li {
+  padding: 12px 15px;
+  cursor: pointer;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
+}
+
+nav ul li i {
+  width: 18px; /* keeps icons aligned */
+  text-align: center;
+}
+
+nav ul li:hover {
+  background-color: #21262d;
+  color: white;
+  border-radius: 22px;
+}
+
+nav ul li.active {
+  background-color: #243546;
+  color: white;
+  font-weight: 600;
+  border-radius: 22px;
+}
+
+/* LOGOUT BUTTON */
+.logout-btn {
+  margin-top: 20px;
+  background-color: #1f6feb;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #131d26;
+}
+
+.content {
+  padding: 30px;
+}
+.aly {
+  font-size: xx-large
+}
+
+.subtext {
+  color: gray;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.tabs {
+  display: flex;
+  padding-bottom: 20px;
+  /* margin-bottom: 20px;
+  margin-top: 20px; */
+}
+
+.tabs button {
+  background-color: #131d26;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  width: 270px;
+  padding-bottom: 15px;
+  cursor: pointer;
+  border-bottom: 1.17px solid #3d3d3d;
+  
+}
+
+.tabs button.active {
+  border-bottom: 3px solid white;
+}
+
+.tab :hover{
+  background-color: #131d26a4;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-box {
+  padding: 20px;
+  border-radius: 14px;
+  border: 1.17px solid #3d3d3d;
+}
+
+.stat-box p {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.stat-box h2 {
+  font-size: 28px;
+}
+
+.positive {
+  color: #2ecc71;
+  display: block;
+  font-size: 19px;
+}
+
+.negative {
+  color: #e74c3c;
+  font-size: 19px;
+  display: block;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.chart-box {
+  border: 1.17px solid #3d3d3d;
+  padding: 20px;
+  border-radius: 14px;
+}
+
+.chart-line {
+  margin-top: 20px;
+  height: 150px;
+  border-radius: 6px;
+  background: linear-gradient(to top, #21262d, #2d333b);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -30%;
+  width: 160%;
+  height: 2px;
+  background: #fff5;
+  transform: rotate(-5deg);
+}

@@ -1,0 +1,112 @@
+/* Use base styles from home.css */
+@import url('home.css');
+
+/* Override for Inbox */
+
+.inbox-container {
+  display: flex;
+  background-color: #15222E;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 70vh;
+}
+
+.message-list {
+  width: 40%;
+  background-color: #15222E;
+  border-right: 1px solid #3d3d3d;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.msg-header {
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 1px solid #3d3d3d;
+  margin-bottom: 10px;
+}
+
+.msg-header button {
+  background: none;
+  border: none;
+  width: 195px;
+  color: #c9d1d9;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.msg-header button.active {
+  border-bottom: 2px solid white;
+  font-weight: bold;
+}
+
+.msg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background 0.3s;
+  cursor: pointer;
+}
+
+.msg:hover {
+  background-color: #21262d;
+}
+
+.msg img {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.msg div {
+  flex: 1;
+}
+
+.msg .name {
+  font-weight: bold;
+}
+
+.msg .text {
+  font-size: 0.85rem;
+  color: gray;
+}
+
+.msg .time {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.chat-preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: #15222E;
+}
+
+.chat-icon {
+  text-align: center;
+  color: #c9d1d9;
+}
+
+.chat-icon i {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.send-btn {
+  margin-top: 15px;
+  background-color: #1f6feb;
+  color: white;
+  display: flex;
+  margin-left: 28px;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+}

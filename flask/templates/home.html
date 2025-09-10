@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Dashboard</title>
+  <link rel="stylesheet" href="static/home.css" />
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR / HEADER -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <!-- Logo inside navbar -->
+      <div class="logo">
+        <img src="static/images/logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li>Home</li>
+        <li>Explore</li>
+        <li>Live</li>
+        <li>Trends</li>
+        <li>Notifications</li>
+      </ul>
+    </div>
+    <div class="avatar"></div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">Ramesh Rajpurohit</p>
+          <p class="handle">@rameshraj2118</p>
+        </div>
+        <nav>
+          <ul>
+            <li class="active"><i class="fa-solid fa-chart-simple"></i> Analytics</li>
+            <li><i class="fa-solid fa-plus"></i>Posts</li>
+            <li><i class="fa-solid fa-calendar-days"></i> Schedule</li>
+            <li><i class="fa-solid fa-bullhorn"></i> Ads</li>
+            <li><i class="fa-regular fa-comment-dots"></i> Inbox</li>
+            <li><i class="fa-solid fa-gear"></i> Settings</li>
+          </ul>
+        </nav>
+      </div>
+      <button class="logout-btn">Log Out</button>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Analytics</h1>
+        <p class="subtext">This is your dashboard for the last 30 days.</p>
+
+        <div class="tabs">
+          <button class="active">Instagram</button>
+          <button>YouTube</button>
+          <button>Facebook</button>
+          <button>Twitter</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <p>Followers</p>
+            <h2>3,000 <span class="positive">+100</span></h2>
+          </div>
+          <div class="stat-box">
+            <p>Impressions</p>
+            <h2>2,800 <span class="negative">-500</span></h2>
+          </div>
+          <div class="stat-box">
+            <p>Engagement rate</p>
+            <h2>40% <span class="positive">+12%</span></h2>
+          </div>
+          <div class="stat-box">
+            <p>Likes</p>
+            <h2>31% <span class="positive">+8%</span></h2>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <p>Impressions</p>
+            <h2>2,800 impressions <span class="positive">+50</span></h2>
+            <div class="chart-line"></div>
+          </div>
+          <div class="chart-box">
+            <p>Followers Gained</p>
+            <h2>3,000 followers <span class="positive">+100</span></h2>
+            <div class="chart-line"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
