@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SocialSync Login</title>
-  <link rel="stylesheet" href="signup.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <header class="navbar">
     <div class="logo">
       <!-- Placeholder for logo -->
-      <img src="logo.png" alt="SocialSync Logo">
+      <img src="static/images/logo.png" alt="SocialSync Logo">
     </div>
     <nav>
       <ul>
@@ -20,7 +20,7 @@
         <li><a href="#">About us</a></li>
         <li><a href="#">Services</a></li>
         <li><a href="#">Contact</a></li>
-        <li><a href="login.html" class="login">Login</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
       </ul>
     </nav>
   </header>
@@ -29,7 +29,7 @@
   <main class="container">
     <!-- Left Section (Social Mesh Image) -->
     <div class="left">
-      <img src="social.png" alt="Social Mesh Graphic" class="mesh-image">
+      <img src="static/images/social.png" alt="Social Mesh Graphic" class="mesh-image">
     </div>
 
     <!-- Right Section (Login Form) -->
@@ -51,7 +51,7 @@
         </div>
         <button type="submit" class="signup-btn">Sign up</button>
         <p class="login-text">
-          Already have an account ? <a href="login.html">Log in</a>
+          Already have an account ? <a href="{{ url_for('login') }}">Login</a>
         </p>
         <div class="divider">────────  or Sign up with  ────────</div>
         <div class="social-login">

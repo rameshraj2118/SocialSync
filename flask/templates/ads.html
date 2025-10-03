@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SocialSync Ads</title>
-  <link rel="stylesheet" href="ads.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='ads.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   <header class="top-nav">
     <div class="nav-left">
       <div class="logo">
-        <img src="logo.png" alt="SocialSync Logo">
+        <img src="static/images/.png" alt="SocialSync Logo">
       </div>
       <ul class="menu">
         <li>Home</li>
@@ -35,16 +35,16 @@
         </div>
         <nav>
           <ul>
-            <li><i class="fa-solid fa-chart-simple"></i> Analytics</li>
-            <li><i class="fa-solid fa-plus"></i> Posts</li>
-            <li><i class="fa-solid fa-calendar-days"></i> Schedule</li>
-            <li class="active"><i class="fa-solid fa-bullhorn"></i> Ads</li>
-            <li><i class="fa-regular fa-comment-dots"></i> Inbox</li>
-            <li><i class="fa-solid fa-gear"></i> Settings</li>
+            <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
+            <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i> Posts</li></a>
+            <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+            <a href="{{ url_for('ads') }}"><li class="active"><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
+            <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
+            <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
           </ul>
         </nav>
       </div>
-      <button class="logout-btn">Log Out</button>
+      <a href="{{ url_for('login') }}"><button class="logout-btn">Log Out</button></a>
     </aside>
 
     <!-- MAIN CONTENT -->

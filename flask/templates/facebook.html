@@ -57,10 +57,10 @@
         <p class="subtext">This is your dashboard for the last 30 days.</p>
 
         <div class="tabs">
-          <button class="active">Instagram</button>
+          <button>Instagram</button>
           <a href="{{ url_for('youtube') }}"><button>YouTube</button></a>
-          <a href="{{ url_for('facebook') }}"><button>Facebook</button></a>
-          <a href="{{ url_for('facebook') }}"><button>Twitter</button></a>
+          <a href="{{ url_for('facebook') }}"><button class="active">Facebook</button></a>
+          <button>Twitter</button>
         </div>
 
         <div class="stats-grid">
