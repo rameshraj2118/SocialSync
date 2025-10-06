@@ -41,6 +41,8 @@
             <a href="{{ url_for('home') }}"><li class="active"><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
             <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i>Posts</li></a>
             <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+            <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
+            <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
             <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
           </ul>
         </nav>
@@ -53,41 +55,42 @@
       <section class="content">
         <h1 class="aly">Analytics</h1>
         <p class="subtext">This is your dashboard for the last 30 days.</p>
+
         <div class="tabs">
           <a href="{{ url_for('home') }}"><button>Instagram</button></a>
-          <a href="{{ url_for('youtube') }}"><button class="active">YouTube</button></a>
+          <a href="{{ url_for('youtube') }}"><button>YouTube</button></a>
           <a href="{{ url_for('facebook') }}"><button>Facebook</button></a>
-          <a href="{{ url_for('twitter') }}"><button>Twitter</button></a>
+          <a href="{{ url_for('twitter') }}"><button class="active">Twitter</button></a>
         </div>
 
         <div class="stats-grid">
           <div class="stat-box">
-            <p>Subscribes</p>
-            <h2>3,000 <span class="positive">+100</span></h2>
+            <p>Followers</p>
+            <h2>1432 <span class="positive">+57</span></h2>
           </div>
           <div class="stat-box">
             <p>Impressions</p>
-            <h2>2,800 <span class="negative">-500</span></h2>
+            <h2>7,000 <span class="negative">-400</span></h2>
           </div>
           <div class="stat-box">
             <p>Engagement rate</p>
-            <h2>40% <span class="positive">+12%</span></h2>
+            <h2>23% <span class="positive">+12%</span></h2>
           </div>
           <div class="stat-box">
             <p>Likes</p>
-            <h2>31% <span class="positive">+8%</span></h2>
+            <h2>56% <span class="positive">+15%</span></h2>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="chart-box">
             <p>Impressions</p>
-            <h2>2,800 impressions <span class="positive">+50</span></h2>
+            <h2>7,000 impressions <span class="negative">-400</span></h2>
             <div class="chart-line"></div>
           </div>
           <div class="chart-box">
-            <p>Subscribes Gained</p>
-            <h2>3,000 Subscribes <span class="positive">+100</span></h2>
+            <p>Followers Gained</p>
+            <h2>1,432 followers <span class="positive">+57</span></h2>
             <div class="chart-line"></div>
           </div>
         </div>

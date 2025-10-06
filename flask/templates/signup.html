@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SocialSync Login</title>
+  <title>SocialSync Signup</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='signup.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -11,12 +11,11 @@
   <!-- Header -->
   <header class="navbar">
     <div class="logo">
-      <!-- Placeholder for logo -->
-      <img src="static/images/logo.png" alt="SocialSync Logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SocialSync Logo">
     </div>
     <nav>
       <ul>
-        <li><a href="#">Home</a></li>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
         <li><a href="#">About us</a></li>
         <li><a href="#">Services</a></li>
         <li><a href="#">Contact</a></li>
@@ -29,38 +28,63 @@
   <main class="container">
     <!-- Left Section (Social Mesh Image) -->
     <div class="left">
-      <img src="static/images/social.png" alt="Social Mesh Graphic" class="mesh-image">
+      <img src="{{ url_for('static', filename='images/social.png') }}" alt="Social Mesh Graphic" class="mesh-image">
     </div>
 
-    <!-- Right Section (Login Form) -->
+    <!-- Right Section (Signup Form) -->
     <div class="right">
-      <h2>Create you account</h2>
-      <form>
+      <h2>Create your account</h2>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('signup') }}">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter your username" required />
+
         <label>Email</label>
-        <input type="email" placeholder="Enter your email" required />
+        <input type="email" name="email" placeholder="Enter your email" required />
 
         <label>Password</label>
         <div class="password-field">
-          <input type="password" placeholder="Enter your password" required />
-          <span class="eye-icon">👁</span>
+          <input type="password" name="password" placeholder="Enter your password" required id="passwordInput1" />
+          <span class="eye-icon" onclick="togglePassword('passwordInput1')">👁</span>
         </div>
+
         <label>Confirm Password</label>
         <div class="password-field">
-        <input type="password" placeholder="Re-enter your password" />
-          <span class="eye-icon">👁</span>
+          <input type="password" name="confirm_password" placeholder="Re-enter your password" required id="passwordInput2" />
+          <span class="eye-icon" onclick="togglePassword('passwordInput2')">👁</span>
         </div>
+
         <button type="submit" class="signup-btn">Sign up</button>
+
         <p class="login-text">
-          Already have an account ? <a href="{{ url_for('login') }}">Login</a>
+          Already have an account? <a href="{{ url_for('login') }}">Login</a>
         </p>
+
         <div class="divider">────────  or Sign up with  ────────</div>
+
         <div class="social-login">
-         <button class="social-btn"><i class="fab fa-google"></i> Google</button>
-         <button class="social-btn"><i class="fab fa-apple"></i> Apple</button>
-         <button class="social-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
+          <button type="button" class="social-btn"><i class="fab fa-google"></i> Google</button>
+          <button type="button" class="social-btn"><i class="fab fa-apple"></i> Apple</button>
+          <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
         </div>
       </form>
     </div>
   </main>
+
+  <script>
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+  </script>
 </body>
 </html>

@@ -56,9 +56,9 @@
         <!-- TABS -->
         <div class="tabs">
           <button class="active">Instagram</button>
-          <button>YouTube</button>
-          <button>Facebook</button>
-          <button>Twitter</button>
+          <a href="{{ url_for('youtube') }}"><button>YouTube</button></a>
+          <a href="{{ url_for('facebook') }}"><button>Facebook</button></a>
+          <a href="{{ url_for('twitter') }}"><button>Twitter</button></a>
         </div>
 
         <!-- MESSAGES LAYOUT -->
