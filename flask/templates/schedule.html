@@ -30,8 +30,9 @@
     <aside class="sidebar">
       <div>
         <div class="user-info">
-          <p class="username">Ramesh Rajpurohit</p>
-          <p class="handle">@rameshraj2118</p>
+          <p class="username">{{ session.username }}</p>
+          <p class="handle">@{{ session.handle }}</p>
+
         </div>
         <nav>
           <ul>
@@ -53,13 +54,13 @@
         <h1 class="aly">Schedule</h1>
         <p class="subtext">Calendar and Tasks</p>
 
-        <!-- TABS -->
+        <!-- TABS
         <div class="tabs">
           <button class="active">Instagram</button>
           <button>YouTube</button>
           <button>Facebook</button>
           <button>Twitter</button>
-        </div>
+        </div> -->
 
         <!-- TASKS & CALENDAR -->
         <div class="schedule-container">
@@ -67,46 +68,171 @@
           <div class="tasks-box">
             <h3>Tasks</h3>
             <ul class="task-list">
-              <li><input type="checkbox"> Post vlog</li>
-              <li><input type="checkbox"> Write script</li>
-              <li><input type="checkbox"> Read research papaers</li>
-              <li><input type="checkbox"> Go live at 8 PM</li>
-              <li><input type="checkbox"> Edit Video</li>
-              <li><input type="checkbox"> Meditate</li>
-              <li><input type="checkbox"> Call manager</li>
-              <li><input type="checkbox"> Meeting at 10 AM</li>
-            </ul>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Post vlog</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Write script</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Read research papers</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Go live at 8 PM</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Edit Video</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Meditate</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Call manager</span>
+  </li>
+  <li>
+    <input type="checkbox">
+    <span contenteditable="true">Meeting at 10 AM</span>
+  </li>
+
+  <!-- NEW TASK ROW -->
+  <li class="new-task">
+    <span contenteditable="true" class="placeholder">+ Add a new task</span>
+  </li>
+</ul>
+
           </div>
 
           <!-- Calendar -->
           <div class="calendar-box">
             <h3>Calendar</h3>
             <div class="calendar-header">
-              <button class="cal-btn"><i class="fa-solid fa-chevron-left"></i></button>
-              <span>January 2025</span>
-              <button class="cal-btn"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
+  <button class="cal-btn" onclick="prevMonth()">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+  <span id="calendarTitle"></span>
+  <button class="cal-btn" onclick="nextMonth()">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+</div>
 
-            <table class="calendar">
-              <thead>
-                <tr>
-                  <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>30</td><td>31</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
-                <tr><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
-                <tr><td>13</td><td>14</td><td>15</td><td class="highlight">16</td><td>17</td><td class="red">18</td><td>19</td></tr>
-                <tr><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td></tr>
-                <tr><td>27</td><td>28</td><td>29</td><td>30</td><td>31</td><td>1</td><td>2</td></tr>
-              </tbody>
-            </table>
+<table class="calendar">
+  
+  <thead>
+    <tr>
+      <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
+    </tr>
+  </thead>
+  <tbody id="calendarBody"></tbody>
+</table>
 
-            <p class="meeting-note">Meeting : 18/01/2025 at 10 AM</p>
+
+            <p class="meeting-note">Meeting : 31/12/2025 at 10 AM</p>
           </div>
         </div>
       </section>
     </main>
   </div>
+  <script>
+  document.querySelector('.new-task span').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+
+      if (!this.textContent.trim()) return;
+
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <input type="checkbox">
+        <span contenteditable="true">${this.textContent}</span>
+      `;
+
+      this.closest('ul').insertBefore(li, this.closest('.new-task'));
+      this.textContent = '+ Add a new task';
+      this.blur();
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.type === 'checkbox') {
+      const li = e.target.closest('li');
+      li.classList.toggle('completed', e.target.checked);
+    }
+  });
+
+  let currentDate = new Date();
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const prevLastDate = new Date(year, month, 0).getDate();
+
+    const calendarBody = document.getElementById('calendarBody');
+    const calendarTitle = document.getElementById('calendarTitle');
+
+    calendarBody.innerHTML = '';
+    calendarTitle.textContent =
+      currentDate.toLocaleString('default', { month: 'long' }) + ' ' + year;
+
+    let date = 1;
+    let nextDate = 1;
+
+    for (let i = 0; i < 6; i++) {
+      const row = document.createElement('tr');
+
+      for (let j = 0; j < 7; j++) {
+        const cell = document.createElement('td');
+
+        if (i === 0 && j < firstDay) {
+          cell.textContent = prevLastDate - firstDay + j + 1;
+          cell.classList.add('muted');
+        } 
+        else if (date > lastDate) {
+          cell.textContent = nextDate++;
+          cell.classList.add('muted');
+        } 
+        else {
+          cell.textContent = date;
+
+          const today = new Date();
+          if (
+            date === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear()
+          ) {
+            cell.classList.add('today');
+          }
+
+          date++;
+        }
+
+        row.appendChild(cell);
+      }
+
+      calendarBody.appendChild(row);
+    }
+  }
+
+  function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }
+
+  renderCalendar();
+</script>
+
 </body>
 </html>

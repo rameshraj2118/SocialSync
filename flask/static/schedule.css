@@ -98,3 +98,90 @@
   color: gray;
   font-size: 0.9rem;
 }
+.task-list {
+  list-style: none;
+  padding: 0;
+}
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.task-list li:hover {
+  background: #1a1a1a;
+}
+
+.task-list span[contenteditable] {
+  outline: none;
+  cursor: text;
+  flex: 1;
+}
+
+/* Placeholder style */
+.new-task .placeholder {
+  color: #777;
+}
+
+.new-task .placeholder:focus {
+  color: #fff;
+}
+
+/* Checkbox spacing */
+.task-list input[type="checkbox"] {
+  cursor: pointer;
+}
+/* COMPLETED TASK */
+.task-list li.completed span {
+  text-decoration: line-through;
+  color: #777;
+}
+
+/* Subtle fade */
+.task-list li.completed {
+  opacity: 0.7;
+}
+.calendar td {
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.calendar td:hover {
+  background: #1a1a1a;
+}
+
+.calendar td.muted {
+  color: #555;
+}
+
+.calendar td.today {
+  background: #1da1f2;
+  color: #fff;
+  font-weight: bold;
+}
+.calendar td.selected {
+  outline: 2px solid #1da1f2;
+}
+
+.calendar td.has-task::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  background: #1da1f2;
+  border-radius: 50%;
+  margin: 4px auto 0;
+}
+
+.selected-date {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #aaa;
+}
+

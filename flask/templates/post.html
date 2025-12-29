@@ -30,8 +30,9 @@
     <aside class="sidebar">
       <div>
         <div class="user-info">
-          <p class="username">Ramesh Rajpurohit</p>
-          <p class="handle">@rameshraj2118</p>
+          <p class="username">{{ session.username }}</p>
+<p class="handle">@{{ session.handle }}</p>
+
         </div>
         <nav>
           <ul>
@@ -53,24 +54,47 @@
         <h1 class="aly">Posts</h1>
         <p class="subtext">Manage and view your posts</p>
 
-        <!-- TABS -->
+        <!-- 'TABS
         <div class="tabs">
           <button class="active">Instagram</button>
           <a href="{{ url_for('youtube') }}"><button>YouTube</button></a>
           <button>Facebook</button>
           <button>Twitter</button>
-        </div>
+        </div>' -->
 
         <!-- Recent Posts -->
         <div class="posts-section">
           <div class="posts-header">
             <h3>Recent Posts</h3>
-            <button class="new-btn"><i class="fa-solid fa-plus"></i> New</button>
+            <button class="new-btn" onclick="openPostModal()">
+  <i class="fa-solid fa-plus"></i> New Post
+</button>
+
           </div>
           <div class="posts-grid">
-            <img src="static/images/2.jpg" alt="Post 1">
-            <img src="static/images/1.jpg" alt="Post 2">
-            <img src="static/images/3.jpg" alt="Post 3">
+            <div class="post-card">
+  <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Post">
+  <div class="post-overlay">
+    <span><i class="fa-solid fa-heart"></i> 8.7K</span>
+    <span><i class="fa-solid fa-eye"></i> 112K</span>
+  </div>
+</div>
+
+            <div class="post-card">
+  <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Post">
+  <div class="post-overlay">
+    <span><i class="fa-solid fa-heart"></i> 2K</span>
+    <span><i class="fa-solid fa-eye"></i> 4.8K</span>
+  </div>
+</div>
+
+            <div class="post-card">
+  <img src="{{ url_for('static', filename='images/3.jpg') }}" alt="Post">
+  <div class="post-overlay">
+    <span><i class="fa-solid fa-heart"></i> 1.2K</span>
+    <span><i class="fa-solid fa-eye"></i> 8.4K</span>
+  </div>
+</div>
           </div>
         </div>
 
@@ -87,5 +111,99 @@
       </section>
     </main>
   </div>
+  <!-- CREATE POST MODAL -->
+<div class="modal-overlay" id="postModal">
+  <div class="modal">
+
+    <div class="modal-header">
+      <h2>Create New Post</h2>
+      <span class="close-btn" onclick="closePostModal()">&times;</span>
+    </div>
+
+    <!-- PLATFORM SELECTION -->
+    <div class="modal-section">
+      <h4>Select Platforms</h4>
+      <div class="platform-boxes">
+        <div class="platform-box active">
+          <i class="fab fa-instagram"></i>
+          <span>Instagram</span>
+        </div>
+        <div class="platform-box">
+          <i class="fab fa-facebook"></i>
+          <span>Facebook</span>
+        </div>
+        <div class="platform-box">
+          <i class="fab fa-twitter"></i>
+          <span>Twitter</span>
+        </div>
+        <div class="platform-box">
+          <i class="fab fa-youtube"></i>
+          <span>YouTube</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST CONTENT -->
+    <div class="modal-section">
+      <h4>Post Content</h4>
+      <textarea placeholder="Write your caption or post content..."></textarea>
+      <button class="attach-btn" type="button" onclick="this.innerText='Attachment Added'">
+  <i class="fa-solid fa-paperclip"></i> Add Attachment
+</button>
+
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="modal-actions">
+      <div class="modal-actions">
+  <button class="draft-btn" onclick="fakeAction('draft')">Save Draft</button>
+  <button class="publish-btn" onclick="fakeAction('post')">Post Now</button>
+</div>
+
+      <p class="action-status" id="actionStatus"></p>
+    </div>
+
+  </div>
+</div>
+<script>
+  function openPostModal() {
+    document.getElementById('postModal').style.display = 'flex';
+  }
+
+  function closePostModal() {
+    document.getElementById('postModal').style.display = 'none';
+  }
+
+  document.querySelectorAll('.platform-box').forEach(box => {
+    box.addEventListener('click', () => {
+      box.classList.toggle('active');
+    });
+  });
+  
+</script>
+<script>
+  function fakeAction(type) {
+    const status = document.getElementById('actionStatus');
+    const modal = document.getElementById('postModal');
+
+    status.style.color = '#1da1f2';
+    status.textContent =
+      type === 'post' ? 'Posting...' : 'Saving draft...';
+
+    setTimeout(() => {
+      status.style.color = '#4CAF50';
+      status.textContent =
+        type === 'post'
+          ? 'Post published successfully!'
+          : 'Draft saved successfully!';
+
+      setTimeout(() => {
+        status.textContent = '';
+        modal.style.display = 'none';
+      }, 1200);
+    }, 1000);
+  }
+</script>
+
 </body>
 </html>

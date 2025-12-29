@@ -12,7 +12,7 @@
   <header class="top-nav">
     <div class="nav-left">
       <div class="logo">
-        <img src="static/images/.png" alt="SocialSync Logo">
+        <img src="static/images/logo.png" alt="SocialSync Logo">
       </div>
       <ul class="menu">
         <li>Home</li>
@@ -30,8 +30,9 @@
     <aside class="sidebar">
       <div>
         <div class="user-info">
-          <p class="username">Ramesh Rajpurohit</p>
-          <p class="handle">@rameshraj2118</p>
+          <p class="username">{{ session.username }}</p>
+<p class="handle">@{{ session.handle }}</p>
+
         </div>
         <nav>
           <ul>
@@ -53,13 +54,13 @@
         <h1 class="aly">Inbox</h1>
         <p class="subtext">Recent messages</p>
 
-        <!-- TABS -->
+        <!-- TABS
         <div class="tabs">
           <button class="active">Instagram</button>
           <a href="{{ url_for('youtube') }}"><button>YouTube</button></a>
           <a href="{{ url_for('facebook') }}"><button>Facebook</button></a>
           <a href="{{ url_for('twitter') }}"><button>Twitter</button></a>
-        </div>
+        </div> -->
 
         <!-- MESSAGES LAYOUT -->
         <div class="inbox-container">

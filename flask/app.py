@@ -28,17 +28,23 @@ def login():
 
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
+        cursor.execute(
+            "SELECT id, username, email, password FROM users WHERE email=?",
+            (email,)
+        )
         user = cursor.fetchone()
         conn.close()
 
         if user and check_password_hash(user[3], password):
+            session.clear()  # important safety
             session['user_id'] = user[0]
             session['username'] = user[1]
-            flash("Login successful!", "success")
+            session['handle'] = user[2].split('@')[0]  # ✅ THIS IS THE KEY LINE
+
+            print("SESSION DEBUG:", dict(session))  # DEBUG
             return redirect(url_for('home'))
-        else:
-            flash("Invalid email or password", "danger")
+
+        flash("Invalid email or password", "danger")
 
     return render_template('login.html')
 
