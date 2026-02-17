@@ -34,7 +34,7 @@ body {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 110px;
 }
 
 a {
@@ -52,18 +52,21 @@ a {
 .logo img {
   width: auto;
   height: 2.5rem;
+  margin-right: 25px;
 }
 
 .menu {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 110px;
   list-style: none;
   transform: translateX(80px);
 }
 
-.menu li {
+.menu-list {
   cursor: pointer;
+  display: flex;
   color: #c9d1d9;
   font-weight: 500;
 }
@@ -73,6 +76,7 @@ a {
   height: 32px;
   background-color: gray;
   border-radius: 50%;
+  margin-left: 13%;
   transform: translateX(-50px);
 }
 
@@ -189,7 +193,10 @@ nav ul li.active {
 
 .tabs {
   display: flex;
-  padding-bottom: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+  justify-content: space-evenly;
+  border-bottom: 1.17px solid #3d3d3d;
   /* margin-bottom: 20px;
   margin-top: 20px; */
 }
@@ -199,10 +206,9 @@ nav ul li.active {
   border: none;
   color: white;
   padding: 8px 16px;
-  width: 270px;
   padding-bottom: 15px;
   cursor: pointer;
-  border-bottom: 1.17px solid #3d3d3d;
+  /* border-bottom: 1.17px solid #3d3d3d; */
   
 }
 

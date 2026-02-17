@@ -1,237 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SocialSync Schedule</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SocialSync Schedule</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='schedule.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 </head>
+
 <body>
-  <!-- NAVBAR -->
-  <header class="top-nav">
-    <div class="nav-left">
-      <div class="logo">
-        <img src="static/images/logo.png" alt="SocialSync Logo">
-      </div>
-      <ul class="menu">
-        <li>Home</li>
-        <li>Explore</li>
-        <li>Live</li>
-        <li>Trends</li>
-        <li>Notifications</li>
-      </ul>
+
+<!-- NAVBAR -->
+<header class="top-nav">
+  <div class="nav-left">
+    <div class="logo">
+      <img src="static/images/logo.png" alt="SocialSync Logo">
     </div>
-    <div class="avatar"></div>
-  </header>
+    <ul class="menu">
+      <li>Home</li>
+      <li>Explore</li>
+      <li>Live</li>
+      <li>Trends</li>
+      <li>Notifications</li>
+    </ul>
+  </div>
+  <div class="avatar"></div>
+</header>
 
-  <div class="layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div>
-        <div class="user-info">
-          <p class="username">{{ session.username }}</p>
-          <p class="handle">@{{ session.handle }}</p>
+<div class="layout">
 
-        </div>
-        <nav>
-          <ul>
-            <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
-            <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i> Posts</li></a>
-            <a href="{{ url_for('schedule') }}"><li class="active"><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
-            <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
-            <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
-            <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
-          </ul>
-        </nav>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="user-info">
+        <p class="username">{{ session.username }}</p>
+        <p class="handle">@{{ session.handle }}</p>
       </div>
-      <a href="{{ url_for('login') }}"><button class="logout-btn">Log Out</button></a>
-    </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="main">
-      <section class="content">
-        <h1 class="aly">Schedule</h1>
-        <p class="subtext">Calendar and Tasks</p>
+      <nav>
+        <ul>
+          <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
+          <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i> Posts</li></a>
+          <a href="{{ url_for('schedule') }}"><li class="active"><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+          <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
+          <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
+          <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
+        </ul>
+      </nav>
+    </div>
 
-        <!-- TABS
-        <div class="tabs">
-          <button class="active">Instagram</button>
-          <button>YouTube</button>
-          <button>Facebook</button>
-          <button>Twitter</button>
-        </div> -->
+    <a href="{{ url_for('logout') }}">
+      <button class="logout-btn">Log Out</button>
+    </a>
+  </aside>
 
-        <!-- TASKS & CALENDAR -->
-        <div class="schedule-container">
-          <!-- Tasks -->
-          <div class="tasks-box">
-            <h3>Tasks</h3>
-            <ul class="task-list">
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Post vlog</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Write script</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Read research papers</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Go live at 8 PM</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Edit Video</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Meditate</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Call manager</span>
-  </li>
-  <li>
-    <input type="checkbox">
-    <span contenteditable="true">Meeting at 10 AM</span>
-  </li>
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <section class="content">
 
-  <!-- NEW TASK ROW -->
-  <li class="new-task">
-    <span contenteditable="true" class="placeholder">+ Add a new task</span>
-  </li>
-</ul>
+      <h1 class="aly">Schedule</h1>
+      <p class="subtext">Calendar and Tasks</p>
 
+      <div class="schedule-container">
+
+        <!-- TASKS -->
+        <div class="tasks-box">
+          <h3>Tasks</h3>
+
+          <ul class="task-list" id="taskList">
+            <li class="new-task">
+              <span contenteditable="true" class="placeholder">+ Add a new task</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- CALENDAR -->
+        <div class="calendar-box">
+          <h3>Calendar</h3>
+
+          <div class="calendar-header">
+            <button class="cal-btn" onclick="prevMonth()">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            <span id="calendarTitle"></span>
+
+            <button class="cal-btn" onclick="nextMonth()">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
           </div>
 
-          <!-- Calendar -->
-          <div class="calendar-box">
-            <h3>Calendar</h3>
-            <div class="calendar-header">
-  <button class="cal-btn" onclick="prevMonth()">
-    <i class="fa-solid fa-chevron-left"></i>
-  </button>
-  <span id="calendarTitle"></span>
-  <button class="cal-btn" onclick="nextMonth()">
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
+          <table class="calendar">
+            <thead>
+              <tr>
+                <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
+              </tr>
+            </thead>
+            <tbody id="calendarBody"></tbody>
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+  </main>
 </div>
 
-<table class="calendar">
-  
-  <thead>
-    <tr>
-      <th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th>
-    </tr>
-  </thead>
-  <tbody id="calendarBody"></tbody>
-</table>
 
+<!-- TASK MODAL -->
+<div id="taskModal" class="modal">
+  <div class="modal-content">
+    <h3>Add Task</h3>
+    <input type="text" id="taskInput" placeholder="Enter task..." />
 
-            <p class="meeting-note">Meeting : 31/12/2025 at 10 AM</p>
-          </div>
-        </div>
-      </section>
-    </main>
+    <div class="modal-buttons">
+      <button onclick="saveTask()">Save</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
   </div>
-  <script>
-  document.querySelector('.new-task span').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+</div>
 
-      if (!this.textContent.trim()) return;
 
-      const li = document.createElement('li');
-      li.innerHTML = `
-        <input type="checkbox">
-        <span contenteditable="true">${this.textContent}</span>
-      `;
+<script>
 
-      this.closest('ul').insertBefore(li, this.closest('.new-task'));
-      this.textContent = '+ Add a new task';
-      this.blur();
-    }
+let currentDate = new Date();
+let selectedDateForTask = null;
+
+
+// ================= LOAD TASKS =================
+async function loadTasks() {
+  const res = await fetch("/api/tasks");
+  const tasks = await res.json();
+
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach(task => {
+    const li = document.createElement("li");
+    li.dataset.id = task.id;
+
+    li.innerHTML = `
+  <input type="checkbox" ${task.completed ? "checked" : ""}>
+  <span contenteditable="true">${task.title}</span>
+  ${task.due_date ? `<small> (${task.due_date})</small>` : ""}
+
+  <button class="delete-btn">
+    <i class="fa-solid fa-trash"></i>
+  </button>
+`;
+
+
+    if (task.completed) li.classList.add("completed");
+
+    list.appendChild(li);
   });
 
-  document.addEventListener('change', function (e) {
-    if (e.target.type === 'checkbox') {
-      const li = e.target.closest('li');
-      li.classList.toggle('completed', e.target.checked);
-    }
+  list.innerHTML += `
+   <li class="new-task">
+  <span contenteditable="true" class="task-input">+ Add a new task</span>
+  </li>
+  `;
+}
+loadTasks();
+
+
+// ================= ADD NEW TASK =================
+document.addEventListener("keydown", async function(e) {
+  if (e.target.closest(".new-task span") && e.key === "Enter") {
+    e.preventDefault();
+
+    const title = e.target.textContent.trim();
+    if (!title || title === "+ Add a new task") return;
+
+
+    await fetch("/api/tasks", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ title })
+    });
+
+    loadTasks();
+  }
+});
+
+
+// ================= CHECKBOX UPDATE =================
+document.addEventListener("change", async function(e) {
+  if (e.target.type === "checkbox") {
+    const li = e.target.closest("li");
+    const taskId = li.dataset.id;
+    if (!taskId) return;
+
+    await fetch(`/api/tasks/${taskId}`, {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ completed: e.target.checked })
+    });
+
+    li.classList.toggle("completed", e.target.checked);
+  }
+});
+
+
+// ================= MODAL FUNCTIONS =================
+function openModal(date) {
+  selectedDateForTask = date;
+  document.getElementById("taskModal").style.display = "flex";
+  document.getElementById("taskInput").value = "";
+  document.getElementById("taskInput").focus();
+}
+
+function closeModal() {
+  document.getElementById("taskModal").style.display = "none";
+}
+
+async function saveTask() {
+  const title = document.getElementById("taskInput").value.trim();
+  if (!title) return;
+
+  await fetch("/api/tasks", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      title: title,
+      due_date: selectedDateForTask
+    })
   });
 
-  let currentDate = new Date();
+  closeModal();
+  loadTasks();
+}
 
-  function renderCalendar() {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
 
-    const firstDay = new Date(year, month, 1).getDay();
-    const lastDate = new Date(year, month + 1, 0).getDate();
-    const prevLastDate = new Date(year, month, 0).getDate();
+// ================= CALENDAR =================
+function renderCalendar() {
 
-    const calendarBody = document.getElementById('calendarBody');
-    const calendarTitle = document.getElementById('calendarTitle');
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
-    calendarBody.innerHTML = '';
-    calendarTitle.textContent =
-      currentDate.toLocaleString('default', { month: 'long' }) + ' ' + year;
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const prevLastDate = new Date(year, month, 0).getDate();
 
-    let date = 1;
-    let nextDate = 1;
+  const calendarBody = document.getElementById("calendarBody");
+  const calendarTitle = document.getElementById("calendarTitle");
 
-    for (let i = 0; i < 6; i++) {
-      const row = document.createElement('tr');
+  calendarBody.innerHTML = "";
+  calendarTitle.textContent =
+    currentDate.toLocaleString("default", { month: "long" }) + " " + year;
 
-      for (let j = 0; j < 7; j++) {
-        const cell = document.createElement('td');
+  let date = 1;
+  let nextDate = 1;
 
-        if (i === 0 && j < firstDay) {
-          cell.textContent = prevLastDate - firstDay + j + 1;
-          cell.classList.add('muted');
-        } 
-        else if (date > lastDate) {
-          cell.textContent = nextDate++;
-          cell.classList.add('muted');
-        } 
-        else {
-          cell.textContent = date;
+  for (let i = 0; i < 6; i++) {
+    const row = document.createElement("tr");
 
-          const today = new Date();
-          if (
-            date === today.getDate() &&
-            month === today.getMonth() &&
-            year === today.getFullYear()
-          ) {
-            cell.classList.add('today');
-          }
+    for (let j = 0; j < 7; j++) {
+      const cell = document.createElement("td");
 
-          date++;
+      if (i === 0 && j < firstDay) {
+        cell.textContent = prevLastDate - firstDay + j + 1;
+        cell.classList.add("muted");
+      }
+      else if (date > lastDate) {
+        cell.textContent = nextDate++;
+        cell.classList.add("muted");
+      }
+      else {
+        const currentDay = date;
+        cell.textContent = currentDay;
+
+        // today highlight
+        const today = new Date();
+        if (
+          currentDay === today.getDate() &&
+          month === today.getMonth() &&
+          year === today.getFullYear()
+        ) {
+          cell.classList.add("today");
         }
 
-        row.appendChild(cell);
+        // CLICK DATE → OPEN MODAL
+        cell.addEventListener("click", () => {
+          const selectedDate =
+            `${year}-${String(month+1).padStart(2,"0")}-${String(currentDay).padStart(2,"0")}`;
+
+          openModal(selectedDate);
+        });
+
+        date++;
       }
 
-      calendarBody.appendChild(row);
+      row.appendChild(cell);
+    }
+
+    calendarBody.appendChild(row);
+  }
+}
+
+function prevMonth() {
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  renderCalendar();
+}
+
+function nextMonth() {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  renderCalendar();
+}
+
+renderCalendar();
+
+// ================= DELETE TASK (NO CONFIRM) =================
+document.addEventListener("click", async function(e) {
+  if (e.target.closest(".delete-btn")) {
+    const li = e.target.closest("li");
+    const taskId = li.dataset.id;
+
+    if (!taskId) return;
+
+    // delete from database
+    await fetch(`/api/tasks/${taskId}`, {
+      method: "DELETE"
+    });
+
+    // remove from UI instantly
+    li.remove();
+  }
+});
+// ===== ADD TASK PLACEHOLDER BEHAVIOR =====
+
+// remove text when clicked
+document.addEventListener("focusin", function(e) {
+  if (e.target.classList.contains("task-input")) {
+    if (e.target.textContent.trim() === "+ Add a new task") {
+      e.target.textContent = "";
     }
   }
+});
 
-  function prevMonth() {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
+// restore text if left empty
+document.addEventListener("focusout", function(e) {
+  if (e.target.classList.contains("task-input")) {
+    if (!e.target.textContent.trim()) {
+      e.target.textContent = "+ Add a new task";
+    }
   }
+});
 
-  function nextMonth() {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
-  }
-
-  renderCalendar();
 </script>
 
 </body>

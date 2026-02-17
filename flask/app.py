@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -6,8 +6,10 @@ app = Flask(__name__)
 app.secret_key = "Qwe123!@#"  # Change this to something secure!
 
 # --- Database Setup ---
+def get_db():
+    return sqlite3.connect("users.db")
 def init_db():
-    conn = sqlite3.connect('users.db')
+    conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,6 +17,16 @@ def init_db():
                         email TEXT UNIQUE NOT NULL,
                         password TEXT NOT NULL
                     )''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            title TEXT NOT NULL,
+            completed INTEGER DEFAULT 0,
+            due_date TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    ''')
     conn.commit()
     conn.close()
 
@@ -81,6 +93,103 @@ def home():
         flash("Please log in to access home.", "warning")
         return redirect(url_for('login'))
     return render_template('home.html', username=session['username'])
+
+# ================= TASK API =================
+
+# GET user tasks
+@app.route("/api/tasks")
+def get_tasks():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT id, title, completed, due_date FROM tasks WHERE user_id=?",
+        (session["user_id"],)
+    )
+
+    tasks = cursor.fetchall()
+    conn.close()
+
+    return jsonify([
+        {
+            "id": t[0],
+            "title": t[1],
+            "completed": bool(t[2]),
+            "due_date": t[3]
+        }
+        for t in tasks
+    ])
+
+
+# ADD task (task list OR calendar)
+@app.route("/api/tasks", methods=["POST"])
+def add_task():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    title = data.get("title")
+    due_date = data.get("due_date")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO tasks (user_id, title, due_date) VALUES (?, ?, ?)",
+        (session["user_id"], title, due_date)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Task added"})
+
+
+# UPDATE checkbox status
+@app.route("/api/tasks/<int:task_id>", methods=["PUT"])
+def update_task(task_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    completed = 1 if data.get("completed") else 0
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE tasks SET completed=? WHERE id=? AND user_id=?",
+        (completed, task_id, session["user_id"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Task updated"})
+
+
+# DELETE task (optional)
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM tasks WHERE id=? AND user_id=?",
+        (task_id, session["user_id"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Task deleted"})
+
 
 
 @app.route('/youtube')
