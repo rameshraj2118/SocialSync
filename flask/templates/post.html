@@ -71,41 +71,13 @@
 </button>
 
           </div>
-          <div class="posts-grid">
-            <div class="post-card">
-  <img src="{{ url_for('static', filename='images/2.jpg') }}" alt="Post">
-  <div class="post-overlay">
-    <span><i class="fa-solid fa-heart"></i> 8.7K</span>
-    <span><i class="fa-solid fa-eye"></i> 112K</span>
-  </div>
-</div>
-
-            <div class="post-card">
-  <img src="{{ url_for('static', filename='images/1.jpg') }}" alt="Post">
-  <div class="post-overlay">
-    <span><i class="fa-solid fa-heart"></i> 2K</span>
-    <span><i class="fa-solid fa-eye"></i> 4.8K</span>
-  </div>
-</div>
-
-            <div class="post-card">
-  <img src="{{ url_for('static', filename='images/3.jpg') }}" alt="Post">
-  <div class="post-overlay">
-    <span><i class="fa-solid fa-heart"></i> 1.2K</span>
-    <span><i class="fa-solid fa-eye"></i> 8.4K</span>
-  </div>
-</div>
-          </div>
+          <div class="posts-grid" id="recentPostsGrid"></div>
         </div>
 
         <!-- Top Posts -->
         <div class="posts-section">
           <h3>Top Posts</h3>
-          <div class="posts-grid">
-            <img src="static/images/4.jpg" alt="Top Post 1">
-            <img src="static/images/5.jpg" alt="Top Post 2">
-            <img src="static/images/6.jpg" alt="Top Post 3">
-          </div>
+          <div class="posts-grid" id="topPostsGrid"></div>
         </div>
 
       </section>
@@ -144,65 +116,235 @@
     </div>
 
     <!-- POST CONTENT -->
-    <div class="modal-section">
-      <h4>Post Content</h4>
-      <textarea placeholder="Write your caption or post content..."></textarea>
-      <button class="attach-btn" type="button" onclick="this.innerText='Attachment Added'">
-  <i class="fa-solid fa-paperclip"></i> Add Attachment
-</button>
+    <form id="postForm">
 
-    </div>
+      <div class="modal-section">
+        <h4>Post Content</h4>
+        <textarea name="caption" placeholder="Write your caption..."></textarea>
+        <input type="file" name="image" id="imageUpload" accept="image/*">
+      </div>
+
+    </form>
 
     <!-- ACTION BUTTONS -->
     <div class="modal-actions">
-      <div class="modal-actions">
-  <button class="draft-btn" onclick="fakeAction('draft')">Save Draft</button>
-  <button class="publish-btn" onclick="fakeAction('post')">Post Now</button>
-</div>
-
-      <p class="action-status" id="actionStatus"></p>
+      <button class="draft-btn" onclick="fakeAction('draft')">Save Draft</button>
+      <button class="publish-btn" onclick="fakeAction('post')">Post Now</button>
     </div>
+    <p class="action-status" id="actionStatus"></p>
 
   </div>
 </div>
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal confirm-modal">
+    <div class="modal-header">
+      <h2>Delete Post</h2>
+      <span class="close-btn" onclick="closeDeleteModal()">&times;</span>
+    </div>
+    <p class="confirm-text">Are you sure you want to delete this post?</p>
+    <div class="confirm-actions">
+      <button class="draft-btn" onclick="closeDeleteModal()">Cancel</button>
+      <button class="publish-btn danger-btn" onclick="confirmDeletePost()">Delete</button>
+    </div>
+  </div>
+</div>
 <script>
-  function openPostModal() {
-    document.getElementById('postModal').style.display = 'flex';
-  }
+let resizedUploadFile = null;
+let pendingDeletePostId = null;
 
-  function closePostModal() {
-    document.getElementById('postModal').style.display = 'none';
-  }
+// ================= MODAL CONTROL =================
+function openPostModal() {
+  document.getElementById("postModal").style.display = "flex";
+}
 
-  document.querySelectorAll('.platform-box').forEach(box => {
-    box.addEventListener('click', () => {
-      box.classList.toggle('active');
-    });
+function closePostModal() {
+  document.getElementById("postModal").style.display = "none";
+}
+
+// ================= PLATFORM SELECT =================
+document.querySelectorAll(".platform-box").forEach(box => {
+  box.addEventListener("click", () => {
+    box.classList.toggle("active");
   });
-  
-</script>
-<script>
-  function fakeAction(type) {
-    const status = document.getElementById('actionStatus');
-    const modal = document.getElementById('postModal');
+});
 
-    status.style.color = '#1da1f2';
-    status.textContent =
-      type === 'post' ? 'Posting...' : 'Saving draft...';
+// ================= IMAGE INPUT =================
+const imageInput = document.getElementById("imageUpload");
+
+if (imageInput) {
+  imageInput.addEventListener("change", async function () {
+    const file = this.files[0];
+    if (!file) {
+      resizedUploadFile = null;
+      return;
+    }
+
+    resizedUploadFile = await resizeImageIfNeeded(file, 1600, 0.85);
+  });
+}
+
+async function resizeImageIfNeeded(file, maxSize, quality) {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  let imageBitmap;
+  try {
+    imageBitmap = await createImageBitmap(file);
+  } catch (err) {
+    return file;
+  }
+  const originalWidth = imageBitmap.width;
+  const originalHeight = imageBitmap.height;
+  const scale = Math.min(1, maxSize / Math.max(originalWidth, originalHeight));
+
+  if (scale === 1) {
+    imageBitmap.close();
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(originalWidth * scale);
+  canvas.height = Math.round(originalHeight * scale);
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(imageBitmap, 0, 0, canvas.width, canvas.height);
+  imageBitmap.close();
+
+  const blob = await new Promise(resolve =>
+    canvas.toBlob(resolve, "image/jpeg", quality)
+  );
+
+  if (!blob) {
+    return file;
+  }
+
+  return new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" });
+}
+
+// ================= GET SELECTED PLATFORMS =================
+function getSelectedPlatforms() {
+  const selected = [];
+  document.querySelectorAll(".platform-box.active span").forEach(el => {
+    selected.push(el.innerText);
+  });
+  return selected.join(",");
+}
+
+// ================= SAVE / PUBLISH POST =================
+async function fakeAction(type) {
+
+  const statusEl = document.getElementById("actionStatus");
+  const form = document.getElementById("postForm");
+
+  const formData = new FormData(form);
+  if (resizedUploadFile) {
+    formData.set("image", resizedUploadFile);
+  }
+  formData.append("platforms", getSelectedPlatforms());
+  formData.append("status", type === "draft" ? "draft" : "published");
+
+  statusEl.style.color = "#1da1f2";
+  statusEl.textContent = "Saving...";
+
+  try {
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!res.ok) throw new Error("Failed");
+
+    statusEl.style.color = "#4CAF50";
+    statusEl.textContent =
+      type === "draft" ? "Draft saved successfully!" : "Post published successfully!";
+
+    // reload posts
+    loadPosts();
+
+    // reset form
+    form.reset();
+    resizedUploadFile = null;
 
     setTimeout(() => {
-      status.style.color = '#4CAF50';
-      status.textContent =
-        type === 'post'
-          ? 'Post published successfully!'
-          : 'Draft saved successfully!';
+      statusEl.textContent = "";
+      closePostModal();
+    }, 1200);
 
-      setTimeout(() => {
-        status.textContent = '';
-        modal.style.display = 'none';
-      }, 1200);
-    }, 1000);
+  } catch (err) {
+    statusEl.style.color = "red";
+    statusEl.textContent = "Error saving post";
   }
+}
+
+function openDeleteModal(postId) {
+  pendingDeletePostId = postId;
+  document.getElementById("deleteModal").style.display = "flex";
+}
+
+function closeDeleteModal() {
+  pendingDeletePostId = null;
+  document.getElementById("deleteModal").style.display = "none";
+}
+
+async function confirmDeletePost() {
+  if (!pendingDeletePostId) return;
+  try {
+    const res = await fetch(`/api/posts/${pendingDeletePostId}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Delete failed");
+    closeDeleteModal();
+    loadPosts();
+  } catch (err) {
+    console.error("Delete error:", err);
+    alert("Could not delete post.");
+  }
+}
+
+// ================= LOAD POSTS FROM DATABASE =================
+async function loadPosts() {
+  try {
+    const res = await fetch("/api/posts");
+    const posts = await res.json();
+
+    const recentGrid = document.getElementById("recentPostsGrid");
+    const topGrid = document.getElementById("topPostsGrid");
+    if (!recentGrid || !topGrid) return;
+
+    recentGrid.innerHTML = "";
+    topGrid.innerHTML = "";
+
+    const renderCard = (post) => {
+      const postHTML = `
+        <div class="post-card">
+          <img src="/${post.image}" alt="Post">
+          <button class="delete-post-btn" onclick="openDeleteModal(${post.id})" title="Delete post">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+          <div class="post-overlay">
+            ${post.caption || ""}
+          </div>
+        </div>
+      `;
+      return postHTML;
+    };
+
+    posts.forEach(post => {
+      recentGrid.insertAdjacentHTML("beforeend", renderCard(post));
+    });
+
+    posts.slice(0, 3).forEach(post => {
+      topGrid.insertAdjacentHTML("beforeend", renderCard(post));
+    });
+
+  } catch (err) {
+    console.error("Error loading posts:", err);
+  }
+}
+
+// ================= INITIAL LOAD =================
+loadPosts();
+
 </script>
 
 </body>

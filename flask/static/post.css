@@ -56,19 +56,39 @@
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 18, 25, 0.75);
+  backdrop-filter: blur(6px);
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay[style*="flex"] {
+  opacity: 1;
 }
 
 /* MODAL BOX */
 .modal {
-  background: #111;
-  width: 420px;
+  background: #15222E;
+  width: 430px;
+  max-width: calc(100vw - 24px);
   border-radius: 12px;
-  padding: 20px;
-  color: #fff;
+  padding: 24px;
+  color: #c9d1d9;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #2b3a47;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+  transform: translateY(20px);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay[style*="flex"] .modal {
+  transform: translateY(0);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 24px rgba(29,161,242,0.28);
 }
 
 /* HEADER */
@@ -76,16 +96,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 8px;
+}
+
+.modal-header h2 {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.3rem;
 }
 
 .close-btn {
   font-size: 24px;
   cursor: pointer;
+  color: #c9d1d9;
 }
 
 /* SECTIONS */
 .modal-section {
   margin-top: 20px;
+}
+
+.modal-section h4 {
+  color: #fff;
+  margin-bottom: 10px;
 }
 
 /* PLATFORM BOXES */
@@ -97,12 +130,14 @@
 }
 
 .platform-box {
-  border: 1px solid #333;
+  border: 1px solid #2b3a47;
   border-radius: 10px;
   padding: 12px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  background: #0f1720;
+  color: #c9d1d9;
 }
 
 .platform-box i {
@@ -120,35 +155,74 @@
 textarea {
   width: 100%;
   min-height: 100px;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: #0f1720;
+  border: 1px solid #2b3a47;
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px 14px;
   color: #fff;
   resize: none;
+  transition: all 0.2s ease;
+}
+
+textarea::placeholder {
+  color: #6b7c8f;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #1da1f2;
+  box-shadow: 0 0 0 2px rgba(29,161,242,0.2);
+}
+
+#imageUpload {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #0f1720;
+  border: 1px solid #2b3a47;
+  border-radius: 8px;
+  color: #c9d1d9;
 }
 
 /* ACTIONS */
 .modal-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+  position: sticky;
+  bottom: 0;
+  background: #15222E;
+  padding-top: 10px;
 }
 
 .draft-btn {
-  background: #333;
-  color: #fff;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
+  background: transparent;
+  border: 1px solid #2b3a47;
+  color: #c9d1d9;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .publish-btn {
   background: #1da1f2;
   color: #fff;
   border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.draft-btn:hover {
+  background: #1a2a36;
+}
+
+.publish-btn:hover {
+  background: #178cd6;
+  transform: translateY(-1px);
 }
 .action-status {
   margin-top: 12px;
@@ -178,12 +252,57 @@ textarea {
   position: relative;
   overflow: hidden;
   border-radius: 12px;
+  aspect-ratio: 4 / 5;
+  background: #0f1720;
 }
 
 .post-card img {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
+}
+
+.delete-post-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.delete-post-btn:hover {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.confirm-modal {
+  width: 360px;
+}
+
+.confirm-text {
+  margin-top: 10px;
+  color: #c9d1d9;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.danger-btn {
+  background: #dc2626;
+}
+
+.danger-btn:hover {
+  background: #b91c1c;
 }
 
 /* OVERLAY */

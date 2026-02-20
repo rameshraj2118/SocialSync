@@ -69,45 +69,338 @@
             <div class="ad-text">
               <h4>Boost a post</h4>
               <p>Turn your best-performing posts into ads to reach more people.</p>
-              <button class="ad-btn">Boost a post</button>
+              <button class="ad-btn" id="boostPostBtn">Boost a post</button>
             </div>
-            <img src="https://i.ibb.co/Nyb1xkM/plant1.png" alt="Boost Ad">
+            <img src="{{ url_for('static', filename='images/boostad.jpg') }}" alt="Boost Ad">
           </div>
 
           <div class="ad-card">
             <div class="ad-text">
               <h4>New ad</h4>
               <p>Design an ad from scratch to promote your business, product, or service.</p>
-              <button class="ad-btn">Create an ad</button>
+              <button class="ad-btn" id="newAdBtn">Create an ad</button>
             </div>
-            <img src="https://i.ibb.co/0VdPxvF/plant2.png" alt="New Ad">
+            <img src="{{ url_for('static', filename='images/new-ad.png') }}" alt="New Ad">
           </div>
         </div>
 
         <!-- MANAGE ADS -->
         <div class="ads-section">
           <h3>Manage ads</h3>
-          <div class="manage-ad">
-            <img src="https://i.ibb.co/Nyb1xkM/plant1.png" alt="Ad Campaign 1">
-            <div class="manage-text">
-              <p class="title">Ad Campaign 1</p>
-              <p class="status running">Running</p>
-            </div>
-            <p class="budget">Budget: $500</p>
-          </div>
-
-          <div class="manage-ad">
-            <img src="https://i.ibb.co/0VdPxvF/plant2.png" alt="Ad Campaign 2">
-            <div class="manage-text">
-              <p class="title">Ad Campaign 2</p>
-              <p class="status paused">Paused</p>
-            </div>
-            <p class="budget">Budget: $300</p>
-          </div>
+          <div id="manageAdsList"></div>
         </div>
 
       </section>
     </main>
   </div>
+  <div class="modal-overlay" id="boostModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Boost A Post</h3>
+        <button class="close-btn" id="closeBoostModal">&times;</button>
+      </div>
+      <p class="modal-subtext">Select one of your posts and launch a campaign.</p>
+
+      <label class="field-label" for="campaignBudget">Budget (₹)</label>
+      <input type="number" id="campaignBudget" min="1" value="100" />
+
+      <p class="field-label">Select post</p>
+      <div id="boostPostsList" class="boost-posts-list"></div>
+
+      <p id="boostStatus" class="boost-status"></p>
+
+      <div class="modal-actions">
+        <button class="modal-secondary" id="cancelBoostBtn">Cancel</button>
+        <button class="modal-primary" id="startCampaignBtn">Start Campaign</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="newAdModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Ad</h3>
+        <button class="close-btn" id="closeNewAdModal">&times;</button>
+      </div>
+      <p class="modal-subtext">Upload a new post and start a campaign immediately.</p>
+
+      <label class="field-label" for="newAdCaption">Caption</label>
+      <textarea id="newAdCaption" rows="4" placeholder="Write your ad caption..."></textarea>
+
+      <label class="field-label" for="newAdImage">Image</label>
+      <input type="file" id="newAdImage" accept="image/*" />
+
+      <label class="field-label" for="newAdBudget">Budget (₹)</label>
+      <input type="number" id="newAdBudget" min="1" value="100" />
+
+      <p id="newAdStatus" class="boost-status"></p>
+
+      <div class="modal-actions">
+        <button class="modal-secondary" id="cancelNewAdBtn">Cancel</button>
+        <button class="modal-primary" id="createNewAdStartBtn">Create And Start</button>
+      </div>
+    </div>
+  </div>
+<script>
+let selectedBoostPostId = null;
+let campaigns = [];
+
+function openBoostModal() {
+  document.getElementById("boostModal").style.display = "flex";
+  document.getElementById("boostStatus").textContent = "";
+  loadBoostPosts();
+}
+
+function closeBoostModal() {
+  document.getElementById("boostModal").style.display = "none";
+  selectedBoostPostId = null;
+}
+
+function openNewAdModal() {
+  document.getElementById("newAdModal").style.display = "flex";
+  document.getElementById("newAdStatus").textContent = "";
+}
+
+function closeNewAdModal() {
+  document.getElementById("newAdModal").style.display = "none";
+  document.getElementById("newAdCaption").value = "";
+  document.getElementById("newAdImage").value = "";
+  document.getElementById("newAdBudget").value = "100";
+}
+
+async function loadBoostPosts() {
+  const list = document.getElementById("boostPostsList");
+  list.innerHTML = "<p class='empty-posts'>Loading posts...</p>";
+
+  try {
+    const res = await fetch("/api/posts");
+    const posts = await res.json();
+
+    if (!posts.length) {
+      list.innerHTML = "<p class='empty-posts'>No posts found. Create a post first.</p>";
+      return;
+    }
+
+    list.innerHTML = "";
+
+    posts.forEach((post, index) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "boost-post-item";
+      item.innerHTML = `
+        <img src="/${post.image}" alt="Post">
+        <div class="boost-post-meta">
+          <p>${post.caption || "Untitled post"}</p>
+        </div>
+      `;
+
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".boost-post-item").forEach(el => el.classList.remove("active"));
+        item.classList.add("active");
+        selectedBoostPostId = post.id;
+      });
+
+      if (index === 0) {
+        item.classList.add("active");
+        selectedBoostPostId = post.id;
+      }
+
+      list.appendChild(item);
+    });
+  } catch (err) {
+    list.innerHTML = "<p class='empty-posts'>Failed to load posts.</p>";
+  }
+}
+
+async function startCampaign() {
+  const statusEl = document.getElementById("boostStatus");
+  const budget = Number(document.getElementById("campaignBudget").value);
+
+  if (!selectedBoostPostId) {
+    statusEl.textContent = "Please select a post.";
+    statusEl.style.color = "#ef4444";
+    return;
+  }
+
+  if (!budget || budget < 1) {
+    statusEl.textContent = "Enter a valid budget.";
+    statusEl.style.color = "#ef4444";
+    return;
+  }
+
+  statusEl.textContent = "Starting campaign...";
+  statusEl.style.color = "#93c5fd";
+
+  try {
+    const res = await fetch("/api/ads/campaigns", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ post_id: selectedBoostPostId, budget: budget })
+    });
+
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+
+    statusEl.textContent = "Campaign started successfully.";
+    statusEl.style.color = "#22c55e";
+
+    campaigns.unshift(data.campaign);
+    renderCampaigns();
+
+    setTimeout(() => {
+      closeBoostModal();
+    }, 700);
+  } catch (err) {
+    statusEl.textContent = "Could not start campaign.";
+    statusEl.style.color = "#ef4444";
+  }
+}
+
+function renderCampaigns() {
+  const list = document.getElementById("manageAdsList");
+  if (!campaigns.length) {
+    list.innerHTML = "<p class='empty-posts'>No campaigns yet.</p>";
+    return;
+  }
+
+  list.innerHTML = campaigns.map(campaign => {
+    const isRunning = campaign.status === "Running";
+    const statusClass = isRunning ? "running" : "paused";
+    const toggleIcon = isRunning ? "fa-pause" : "fa-play";
+    const toggleTo = isRunning ? "Paused" : "Running";
+
+    return `
+      <div class="manage-ad">
+        <img src="/${campaign.image || 'static/images/1.jpg'}" alt="Ad Campaign">
+        <div class="manage-text">
+          <p class="title">${campaign.title}</p>
+          <p class="status ${statusClass}">${campaign.status}</p>
+        </div>
+        <p class="budget">Budget: ₹${campaign.budget}</p>
+        <div class="manage-actions">
+          <button class="ad-action-btn icon-btn pause-btn" title="${toggleTo}" onclick="toggleCampaignStatus(${campaign.id}, '${toggleTo}')">
+            <i class="fa-solid ${toggleIcon}"></i>
+          </button>
+          <button class="ad-action-btn icon-btn delete-btn" title="Delete" onclick="deleteCampaign(${campaign.id})">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadCampaigns() {
+  const list = document.getElementById("manageAdsList");
+  list.innerHTML = "<p class='empty-posts'>Loading campaigns...</p>";
+
+  try {
+    const res = await fetch("/api/ads/campaigns");
+    if (!res.ok) throw new Error("Failed");
+    campaigns = await res.json();
+    renderCampaigns();
+  } catch (err) {
+    list.innerHTML = "<p class='empty-posts'>Could not load campaigns.</p>";
+  }
+}
+
+async function createNewAdCampaign() {
+  const statusEl = document.getElementById("newAdStatus");
+  const caption = document.getElementById("newAdCaption").value.trim();
+  const budget = Number(document.getElementById("newAdBudget").value);
+  const imageFile = document.getElementById("newAdImage").files[0];
+
+  if (!imageFile) {
+    statusEl.textContent = "Please select an image.";
+    statusEl.style.color = "#ef4444";
+    return;
+  }
+
+  if (!budget || budget < 1) {
+    statusEl.textContent = "Enter a valid budget.";
+    statusEl.style.color = "#ef4444";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("caption", caption);
+  formData.append("budget", budget);
+  formData.append("image", imageFile);
+
+  statusEl.textContent = "Creating campaign...";
+  statusEl.style.color = "#93c5fd";
+
+  try {
+    const res = await fetch("/api/ads/campaigns/custom", {
+      method: "POST",
+      body: formData
+    });
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+
+    campaigns.unshift(data.campaign);
+    renderCampaigns();
+
+    statusEl.textContent = "Campaign created.";
+    statusEl.style.color = "#22c55e";
+
+    setTimeout(() => {
+      closeNewAdModal();
+    }, 700);
+  } catch (err) {
+    statusEl.textContent = "Could not create ad campaign.";
+    statusEl.style.color = "#ef4444";
+  }
+}
+
+async function toggleCampaignStatus(campaignId, nextStatus) {
+  try {
+    const res = await fetch(`/api/ads/campaigns/${campaignId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus })
+    });
+    if (!res.ok) throw new Error("Failed");
+
+    campaigns = campaigns.map(c =>
+      c.id === campaignId ? { ...c, status: nextStatus } : c
+    );
+    renderCampaigns();
+  } catch (err) {
+    alert("Could not update campaign status.");
+  }
+}
+
+async function deleteCampaign(campaignId) {
+  try {
+    const res = await fetch(`/api/ads/campaigns/${campaignId}`, {
+      method: "DELETE"
+    });
+    if (!res.ok) throw new Error("Failed");
+
+    campaigns = campaigns.filter(c => c.id !== campaignId);
+    renderCampaigns();
+  } catch (err) {
+    alert("Could not delete campaign.");
+  }
+}
+
+document.getElementById("boostPostBtn").addEventListener("click", openBoostModal);
+document.getElementById("newAdBtn").addEventListener("click", openNewAdModal);
+document.getElementById("closeBoostModal").addEventListener("click", closeBoostModal);
+document.getElementById("cancelBoostBtn").addEventListener("click", closeBoostModal);
+document.getElementById("startCampaignBtn").addEventListener("click", startCampaign);
+document.getElementById("closeNewAdModal").addEventListener("click", closeNewAdModal);
+document.getElementById("cancelNewAdBtn").addEventListener("click", closeNewAdModal);
+document.getElementById("createNewAdStartBtn").addEventListener("click", createNewAdCampaign);
+
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("boostModal");
+  if (e.target === modal) closeBoostModal();
+  const newAdModal = document.getElementById("newAdModal");
+  if (e.target === newAdModal) closeNewAdModal();
+});
+
+loadCampaigns();
+</script>
 </body>
 </html>

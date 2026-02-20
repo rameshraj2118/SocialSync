@@ -1,11 +1,17 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import random
+import os
+import time
 
 app = Flask(__name__)
 app.secret_key = "Qwe123!@#"  # Change this to something secure!
 
+UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 # --- Database Setup ---
 def get_db():
     return sqlite3.connect("users.db")
@@ -41,6 +47,32 @@ def init_db():
             profile_visibility TEXT DEFAULT 'Friends Only',
             direct_messages TEXT DEFAULT 'Everyone',
             FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            caption TEXT,
+            image_path TEXT,
+            platforms TEXT,
+            status TEXT DEFAULT 'published',  -- draft / published
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS campaigns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            post_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT DEFAULT 'Running',
+            budget INTEGER NOT NULL,
+            image_path TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(post_id) REFERENCES posts(id)
         )
         ''')
     conn.commit()
@@ -257,6 +289,305 @@ def facebook_analytics():
 
         "labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
     })
+
+
+@app.route("/api/posts", methods=["POST"])
+def create_post():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    caption = request.form.get("caption")
+    platforms = request.form.get("platforms")
+    status = request.form.get("status", "published")
+
+    file = request.files.get("image")
+    image_path = ""
+
+    if file:
+        filename = secure_filename(file.filename)
+        path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(path)
+        image_path = f"static/uploads/{filename}"
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO posts (user_id, caption, image_path, platforms, status)
+        VALUES (?, ?, ?, ?, ?)
+    """, (session["user_id"], caption, image_path, platforms, status))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Post saved"})
+
+@app.route("/api/posts")
+def get_posts():
+    if "user_id" not in session:
+        return jsonify([])
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, caption, image_path FROM posts
+        WHERE user_id=? AND status='published'
+        ORDER BY created_at DESC
+    """, (session["user_id"],))
+
+    posts = cursor.fetchall()
+    conn.close()
+
+    return jsonify([
+        {"id": p[0], "caption": p[1], "image": p[2]}
+        for p in posts
+    ])
+
+
+@app.route("/api/posts/<int:post_id>", methods=["DELETE"])
+def delete_post(post_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT image_path FROM posts WHERE id=? AND user_id=?",
+        (post_id, session["user_id"])
+    )
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return jsonify({"error": "Post not found"}), 404
+
+    image_path = row[0]
+
+    cursor.execute(
+        "DELETE FROM posts WHERE id=? AND user_id=?",
+        (post_id, session["user_id"])
+    )
+    conn.commit()
+    conn.close()
+
+    if image_path and image_path.startswith("static/uploads/"):
+        full_image_path = os.path.join(app.root_path, image_path)
+        if os.path.exists(full_image_path):
+            try:
+                os.remove(full_image_path)
+            except OSError:
+                pass
+
+    return jsonify({"message": "Post deleted"})
+
+
+@app.route("/api/ads/campaigns", methods=["POST"])
+def create_campaign():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    post_id = data.get("post_id")
+    budget = data.get("budget")
+
+    try:
+        budget = int(budget)
+    except (TypeError, ValueError):
+        budget = 0
+
+    if not post_id or budget < 1:
+        return jsonify({"error": "post_id and budget are required"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT caption, image_path FROM posts
+        WHERE id=? AND user_id=? AND status='published'
+        """,
+        (post_id, session["user_id"])
+    )
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "Post not found"}), 404
+
+    title = (row[0] or "Boost Campaign").strip()
+    title = title[:40] if title else "Boost Campaign"
+    campaign_title = f"Boost: {title}"
+
+    cursor.execute(
+        """
+        INSERT INTO campaigns (user_id, post_id, title, status, budget, image_path)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (session["user_id"], post_id, campaign_title, "Running", budget, row[1])
+    )
+    campaign_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Campaign started",
+        "campaign": {
+            "id": campaign_id,
+            "title": campaign_title,
+            "status": "Running",
+            "budget": budget,
+            "post_id": post_id,
+            "image": row[1]
+        }
+    })
+
+
+@app.route("/api/ads/campaigns/custom", methods=["POST"])
+def create_custom_campaign():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    caption = (request.form.get("caption") or "").strip()
+    budget_raw = request.form.get("budget")
+    file = request.files.get("image")
+
+    try:
+        budget = int(budget_raw)
+    except (TypeError, ValueError):
+        budget = 0
+
+    if budget < 1:
+        return jsonify({"error": "Valid budget is required"}), 400
+
+    if not file or not file.filename:
+        return jsonify({"error": "Image is required"}), 400
+
+    filename = secure_filename(file.filename)
+    filename = f"{int(time.time())}_{filename}"
+    path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(path)
+    image_path = f"static/uploads/{filename}"
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO posts (user_id, caption, image_path, platforms, status)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (session["user_id"], caption, image_path, "Ads", "published")
+    )
+    post_id = cursor.lastrowid
+
+    title = caption[:40] if caption else "Boost Campaign"
+    campaign_title = f"Ad: {title}"
+
+    cursor.execute(
+        """
+        INSERT INTO campaigns (user_id, post_id, title, status, budget, image_path)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (session["user_id"], post_id, campaign_title, "Running", budget, image_path)
+    )
+    campaign_id = cursor.lastrowid
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Ad campaign created",
+        "campaign": {
+            "id": campaign_id,
+            "title": campaign_title,
+            "status": "Running",
+            "budget": budget,
+            "post_id": post_id,
+            "image": image_path
+        }
+    })
+
+
+@app.route("/api/ads/campaigns")
+def get_campaigns():
+    if "user_id" not in session:
+        return jsonify([]), 401
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, title, status, budget, image_path
+        FROM campaigns
+        WHERE user_id=?
+        ORDER BY created_at DESC
+        """,
+        (session["user_id"],)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+
+    return jsonify([
+        {
+            "id": r[0],
+            "title": r[1],
+            "status": r[2],
+            "budget": r[3],
+            "image": r[4]
+        }
+        for r in rows
+    ])
+
+
+@app.route("/api/ads/campaigns/<int:campaign_id>", methods=["PATCH"])
+def update_campaign(campaign_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    status = data.get("status")
+    if status not in ("Running", "Paused"):
+        return jsonify({"error": "Invalid status"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE campaigns
+        SET status=?
+        WHERE id=? AND user_id=?
+        """,
+        (status, campaign_id, session["user_id"])
+    )
+    conn.commit()
+    updated = cursor.rowcount
+    conn.close()
+
+    if not updated:
+        return jsonify({"error": "Campaign not found"}), 404
+
+    return jsonify({"message": "Campaign updated"})
+
+
+@app.route("/api/ads/campaigns/<int:campaign_id>", methods=["DELETE"])
+def delete_campaign(campaign_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM campaigns WHERE id=? AND user_id=?",
+        (campaign_id, session["user_id"])
+    )
+    conn.commit()
+    deleted = cursor.rowcount
+    conn.close()
+
+    if not deleted:
+        return jsonify({"error": "Campaign not found"}), 404
+
+    return jsonify({"message": "Campaign deleted"})
 # ================= TASK API =================
 
 # GET user tasks
