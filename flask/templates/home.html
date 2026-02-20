@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- NAVBAR / HEADER -->
@@ -43,7 +44,7 @@
             <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
             <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
             <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
-            <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
+            <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
           </ul>
         </nav>
       </div>
@@ -66,36 +67,121 @@
         <div class="stats-grid">
           <div class="stat-box">
             <p>Followers</p>
-            <h2>3,000 <span class="positive">+100</span></h2>
+            <h2>
+              <span id="followers">0</span>
+              <span id="followers-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
             <p>Impressions</p>
-            <h2>2,800 <span class="negative">-500</span></h2>
+            <h2>
+              <span id="impressions">0</span>
+              <span id="impressions-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
             <p>Engagement rate</p>
-            <h2>40% <span class="positive">+12%</span></h2>
+            <h2>
+              <span id="engagement">0</span>%
+              <span id="engagement-change">0%</span>
+            </h2>
           </div>
+
           <div class="stat-box">
             <p>Likes</p>
-            <h2>31% <span class="positive">+8%</span></h2>
+            <h2>
+              <span id="likes">0</span>
+              <span id="likes-change">0</span>
+            </h2>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="chart-box">
-            <p>Impressions</p>
-            <h2>2,800 impressions <span class="positive">+50</span></h2>
-            <div class="chart-line"></div>
-          </div>
+              <p>Impressions</p>
+              <h2><span id="impressions-value">0</span> impressions</h2>
+              <canvas id="impressionsChart"></canvas>
+            </div>
           <div class="chart-box">
             <p>Followers Gained</p>
-            <h2>3,000 followers <span class="positive">+100</span></h2>
-            <div class="chart-line"></div>
+            <h2><span id="followers-value">0</span> followers</h2>
+            <canvas id="followersChart"></canvas>
           </div>
         </div>
       </section>
     </main>
   </div>
+  <script>
+let impressionsChart = null;
+let followersChart = null;
+
+async function loadAnalytics() {
+  const res = await fetch("/api/instagram/analytics");
+  const data = await res.json();
+
+  document.querySelector("#followers-value").innerText = data.followers;
+  document.querySelector("#impressions-value").innerText = data.impressions;
+
+  impressionsChart = renderChart("impressionsChart", data.labels, data.impressions_graph, impressionsChart);
+  followersChart = renderChart("followersChart", data.labels, data.followers_graph, followersChart);
+}
+
+function renderChart(canvasId, labels, values, existingChart) {
+  if (existingChart) existingChart.destroy();
+
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, "rgba(236,72,153,0.45)");
+  gradient.addColorStop(1, "rgba(236,72,153,0)");
+
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        borderColor: "#ec4899",
+        backgroundColor: gradient,
+        fill: true,
+        borderWidth: 3,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "rgba(255,255,255,0.05)" } }
+      }
+    }
+  });
+}
+async function loadData() {
+  const res = await fetch("/api/analytics");
+  const data = await res.json();
+
+  updateBox("followers", "followers-change", data.followers, data.followers_change);
+  updateBox("impressions", "impressions-change", data.impressions, data.impressions_change);
+  updateBox("engagement", "engagement-change", data.engagement_rate, data.engagement_change, "%");
+  updateBox("likes", "likes-change", data.likes, data.likes_change);
+}
+
+function updateBox(valueId, changeId, value, change, suffix="") {
+  document.getElementById(valueId).innerText = value;
+
+  const changeEl = document.getElementById(changeId);
+  changeEl.innerText = (change >= 0 ? "+" : "") + change + suffix;
+
+  // set color
+  changeEl.classList.remove("positive", "negative");
+  changeEl.classList.add(change >= 0 ? "positive" : "negative");
+}
+
+loadData();
+setInterval(loadAnalytics, 10000);
+loadAnalytics();
+</script>
 </body>
 </html>

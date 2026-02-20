@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for, session, flash
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+import random
 
 app = Flask(__name__)
 app.secret_key = "Qwe123!@#"  # Change this to something secure!
@@ -27,6 +28,21 @@ def init_db():
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
+            appearance TEXT DEFAULT 'Dark',
+            language TEXT DEFAULT 'English',
+            font_size TEXT DEFAULT 'Medium',
+            email_notifications INTEGER DEFAULT 1,
+            push_notifications INTEGER DEFAULT 0,
+            inapp_notifications INTEGER DEFAULT 1,
+            profile_visibility TEXT DEFAULT 'Friends Only',
+            direct_messages TEXT DEFAULT 'Everyone',
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        ''')
     conn.commit()
     conn.close()
 
@@ -94,6 +110,153 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html', username=session['username'])
 
+
+import random
+
+@app.route("/api/instagram/analytics")
+def dynamic_mock_analytics():
+    def generate_series(start):
+        values = [start]
+        for _ in range(6):
+            values.append(values[-1] + random.randint(-50, 150))
+        return values
+
+    followers = generate_series(2500)
+    impressions = generate_series(2000)
+    likes = generate_series(800)
+
+    analytics = {
+        "followers": followers[-1],
+        "followers_change": followers[-1] - followers[-2],
+        "impressions": impressions[-1],
+        "impressions_change": impressions[-1] - impressions[-2],
+        "engagement_rate": round((likes[-1] / impressions[-1]) * 100, 2),
+        "likes": likes[-1],
+        "followers_graph": followers,
+        "impressions_graph": impressions,
+        "likes_graph": likes,
+        "labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    }
+
+    return jsonify(analytics)
+import random
+from flask import jsonify
+
+@app.route("/api/analytics")
+def analytics():
+    followers = random.randint(2500, 4000)
+    impressions = random.randint(2000, 5000)
+    engagement = random.randint(20, 60)
+    likes = random.randint(500, 2000)
+
+    return jsonify({
+        "followers": followers,
+        "followers_change": random.randint(-100, 200),
+
+        "impressions": impressions,
+        "impressions_change": random.randint(-500, 500),
+
+        "engagement_rate": engagement,
+        "engagement_change": random.randint(-10, 15),
+
+        "likes": likes,
+        "likes_change": random.randint(-50, 100)
+    })
+import random
+from flask import jsonify
+
+@app.route("/api/youtube")
+def youtube_analytics():
+
+    def generate_series(start):
+        values = [start]
+        for _ in range(6):
+            values.append(values[-1] + random.randint(-20, 200))
+        return values
+
+    subscribers = generate_series(2800)
+    views = generate_series(5000)
+    likes = generate_series(800)
+
+    return jsonify({
+        "subscribers": subscribers[-1],
+        "subscribers_change": subscribers[-1] - subscribers[-2],
+
+        "views": views[-1],
+        "views_change": views[-1] - views[-2],
+
+        "engagement_rate": random.randint(20, 50),
+        "engagement_change": random.randint(-5, 10),
+
+        "likes": likes[-1],
+        "likes_change": likes[-1] - likes[-2],
+
+        "subscribers_graph": subscribers,
+        "views_graph": views,
+        "labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    })
+
+@app.route("/api/twitter")
+def twitter_analytics():
+
+    def generate_series(start):
+        values = [start]
+        for _ in range(6):
+            values.append(values[-1] + random.randint(5, 120))
+        return values
+
+    followers = generate_series(1800)
+    impressions = generate_series(9000)
+
+    return jsonify({
+        "followers": followers[-1],
+        "followers_change": followers[-1] - followers[-2],
+
+        "impressions": impressions[-1],
+        "impressions_change": impressions[-1] - impressions[-2],
+
+        "engagement_rate": random.randint(10, 40),
+        "engagement_change": random.randint(-5, 12),
+
+        "likes": random.randint(500, 2500),
+        "likes_change": random.randint(-50, 120),
+
+        "followers_graph": followers,
+        "impressions_graph": impressions,
+
+        "labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    })
+
+@app.route("/api/facebook")
+def facebook_analytics():
+
+    def generate_series(start):
+        values = [start]
+        for _ in range(6):
+            values.append(values[-1] + random.randint(10, 200))
+        return values
+
+    followers = generate_series(3200)
+    reach = generate_series(7000)
+
+    return jsonify({
+        "followers": followers[-1],
+        "followers_change": followers[-1] - followers[-2],
+
+        "reach": reach[-1],
+        "reach_change": reach[-1] - reach[-2],
+
+        "engagement_rate": random.randint(20, 60),
+        "engagement_change": random.randint(-10, 15),
+
+        "likes": random.randint(1000, 4000),
+        "likes_change": random.randint(-100, 200),
+
+        "followers_graph": followers,
+        "reach_graph": reach,
+
+        "labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+    })
 # ================= TASK API =================
 
 # GET user tasks
@@ -190,7 +353,84 @@ def delete_task(task_id):
 
     return jsonify({"message": "Task deleted"})
 
+@app.route("/api/settings")
+def get_settings():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
 
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT * FROM settings WHERE user_id=?",
+        (session["user_id"],)
+    )
+    data = cursor.fetchone()
+
+    # create default settings if not exists
+    if not data:
+        cursor.execute(
+            "INSERT INTO settings (user_id) VALUES (?)",
+            (session["user_id"],)
+        )
+        conn.commit()
+
+        cursor.execute(
+            "SELECT * FROM settings WHERE user_id=?",
+            (session["user_id"],)
+        )
+        data = cursor.fetchone()
+
+    conn.close()
+
+    return jsonify({
+        "appearance": data[2],
+        "language": data[3],
+        "font_size": data[4],
+        "email_notifications": bool(data[5]),
+        "push_notifications": bool(data[6]),
+        "inapp_notifications": bool(data[7]),
+        "profile_visibility": data[8],
+        "direct_messages": data[9]
+    })
+
+@app.route("/api/settings", methods=["POST"])
+def update_settings():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE settings SET
+        appearance=?,
+        language=?,
+        font_size=?,
+        email_notifications=?,
+        push_notifications=?,
+        inapp_notifications=?,
+        profile_visibility=?,
+        direct_messages=?
+        WHERE user_id=?
+    """, (
+        data.get("appearance"),
+        data.get("language"),
+        data.get("font_size"),
+        1 if data.get("email_notifications") else 0,
+        1 if data.get("push_notifications") else 0,
+        1 if data.get("inapp_notifications") else 0,
+        data.get("profile_visibility"),
+        data.get("direct_messages"),
+        session["user_id"]
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Settings saved"})
 
 @app.route('/youtube')
 def youtube():

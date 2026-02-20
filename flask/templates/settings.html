@@ -40,7 +40,7 @@
             <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
             <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
             <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
-            <a href="{{ url_for('home') }}"><li class="active"><i class="fa-solid fa-gear"></i> Settings</li></a>
+            <a href="{{ url_for('settings') }}"><li class="active"><i class="fa-solid fa-gear"></i> Settings</li></a>
           </ul>
         </nav>
       </div>
@@ -66,15 +66,15 @@
             <h3>General</h3>
             <div class="setting-item">
               <span>Appearance</span>
-              <button class="option-btn">Dark</button>
+              <button class="option-btn" id="appearanceBtn">Dark</button>
             </div>
             <div class="setting-item">
               <span>Language</span>
-              <button class="option-btn">English</button>
+              <button class="option-btn" id="languageBtn">English</button>
             </div>
             <div class="setting-item">
               <span>Font Size</span>
-              <button class="option-btn">Medium</button>
+              <button class="option-btn" id="fontBtn">Medium</button>
             </div>
           </div>
 
@@ -84,21 +84,21 @@
             <div class="setting-item">
               <span>Email Notifications</span>
               <label class="switch">
-                <input type="checkbox" checked>
+                <input type="checkbox" id="emailNotifications" checked>
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <span>Push Notifications</span>
-              <label class="switch">
-                <input type="checkbox">
+              <label class="switch" >
+                <input type="checkbox" id="pushNotifications" checked>
                 <span class="slider"></span>
               </label>
             </div>
             <div class="setting-item">
               <span>In-App Notifications</span>
               <label class="switch">
-                <input type="checkbox" checked>
+                <input type="checkbox" id="inAppNotifications" checked>
                 <span class="slider"></span>
               </label>
             </div>
@@ -141,5 +141,52 @@
       </section>
     </main>
   </div>
+<script>
+// Load saved settings
+async function loadSettings() {
+  try {
+    const res = await fetch("/api/settings");
+    const data = await res.json();
+
+    document.getElementById("appearanceBtn").innerText = data.appearance;
+    document.getElementById("languageBtn").innerText = data.language;
+    document.getElementById("fontBtn").innerText = data.font_size;
+
+    document.getElementById("emailNotifications").checked = data.email_notifications;
+    document.getElementById("pushNotifications").checked = data.push_notifications;
+    document.getElementById("inAppNotifications").checked = data.inapp_notifications;
+
+  } catch(err) {
+    console.log("Settings load error:", err);
+  }
+}
+
+// Save settings
+async function saveSettings() {
+  const settings = {
+    appearance: document.getElementById("appearanceBtn").innerText,
+    language: document.getElementById("languageBtn").innerText,
+    font_size: document.getElementById("fontBtn").innerText,
+    email_notifications: document.getElementById("emailNotifications").checked,
+    push_notifications: document.getElementById("pushNotifications").checked,
+    inapp_notifications: document.getElementById("inAppNotifications").checked,
+    profile_visibility: "Friends Only",
+    direct_messages: "Everyone"
+  };
+
+  await fetch("/api/settings", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(settings)
+  });
+}
+
+// auto save on change
+document.addEventListener("change", saveSettings);
+
+// load when page opens
+document.addEventListener("DOMContentLoaded", loadSettings);
+
+</script>
 </body>
 </html>

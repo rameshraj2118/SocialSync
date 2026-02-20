@@ -62,37 +62,115 @@
 
         <div class="stats-grid">
           <div class="stat-box">
-            <p>Subscribes</p>
-            <h2>3,000 <span class="positive">+100</span></h2>
+            <p>Subscribers</p>
+            <h2>
+              <span id="yt-subs">0</span>
+              <span id="yt-subs-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
-            <p>Impressions</p>
-            <h2>2,800 <span class="negative">-500</span></h2>
+            <p>Views</p>
+            <h2>
+              <span id="yt-views">0</span>
+              <span id="yt-views-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
-            <p>Engagement rate</p>
-            <h2>40% <span class="positive">+12%</span></h2>
+            <p>Engagement Rate</p>
+            <h2>
+              <span id="yt-engagement">0</span>%
+              <span id="yt-engagement-change">0%</span>
+            </h2>
           </div>
+
           <div class="stat-box">
             <p>Likes</p>
-            <h2>31% <span class="positive">+8%</span></h2>
+            <h2>
+              <span id="yt-likes">0</span>
+              <span id="yt-likes-change">0</span>
+            </h2>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="chart-box">
-            <p>Impressions</p>
-            <h2>2,800 impressions <span class="positive">+50</span></h2>
-            <div class="chart-line"></div>
+            <p>Views</p>
+            <canvas id="ytViewsChart"></canvas>
           </div>
+
           <div class="chart-box">
-            <p>Subscribes Gained</p>
-            <h2>3,000 Subscribes <span class="positive">+100</span></h2>
-            <div class="chart-line"></div>
+            <p>Subscribers Growth</p>
+            <canvas id="ytSubsChart"></canvas>
           </div>
         </div>
       </section>
     </main>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let subsChart = null;
+let viewsChart = null;
+
+async function loadYouTubeData() {
+  const res = await fetch("/api/youtube");
+  const data = await res.json();
+
+  updateBox("yt-subs","yt-subs-change",data.subscribers,data.subscribers_change);
+  updateBox("yt-views","yt-views-change",data.views,data.views_change);
+  updateBox("yt-engagement","yt-engagement-change",data.engagement_rate,data.engagement_change,"%");
+  updateBox("yt-likes","yt-likes-change",data.likes,data.likes_change);
+
+  subsChart = createChart("ytSubsChart", data.labels, data.subscribers_graph, subsChart);
+  viewsChart = createChart("ytViewsChart", data.labels, data.views_graph, viewsChart);
+}
+
+function updateBox(valueId, changeId, value, change, suffix="") {
+  document.getElementById(valueId).innerText = value;
+
+  const el = document.getElementById(changeId);
+  el.innerText = (change >= 0 ? "+" : "") + change + suffix;
+
+  el.classList.remove("positive","negative");
+  el.classList.add(change >= 0 ? "positive" : "negative");
+}
+
+function createChart(id, labels, values, existing) {
+  if (existing) existing.destroy();
+
+  const ctx = document.getElementById(id).getContext("2d");
+
+  const gradient = ctx.createLinearGradient(0,0,0,300);
+  gradient.addColorStop(0,"rgba(239,68,68,0.4)");
+  gradient.addColorStop(1,"rgba(239,68,68,0)");
+
+  return new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:labels,
+      datasets:[{
+        data:values,
+        borderColor:"#ef4444",
+        backgroundColor:gradient,
+        fill:true,
+        tension:0.4,
+        borderWidth:3
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:"rgba(255,255,255,0.05)"}}
+      }
+    }
+  });
+}
+
+loadYouTubeData();
+setInterval(loadYouTubeData,10000);
+</script>
 </body>
 </html>

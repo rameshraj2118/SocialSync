@@ -63,39 +63,133 @@
           <a href="{{ url_for('twitter') }}"><button>Twitter</button></a>
         </div>
 
-        <div class="stats-grid">
+       <div class="stats-grid">
           <div class="stat-box">
             <p>Followers</p>
-            <h2>3,000 <span class="positive">+100</span></h2>
+            <h2>
+              <span id="fb-followers">0</span>
+              <span id="fb-followers-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
-            <p>Impressions</p>
-            <h2>2,800 <span class="negative">-500</span></h2>
+            <p>Reach</p>
+            <h2>
+              <span id="fb-reach">0</span>
+              <span id="fb-reach-change">0</span>
+            </h2>
           </div>
+
           <div class="stat-box">
-            <p>Engagement rate</p>
-            <h2>40% <span class="positive">+12%</span></h2>
+            <p>Engagement Rate</p>
+            <h2>
+              <span id="fb-engagement">0</span>%
+              <span id="fb-engagement-change">0%</span>
+            </h2>
           </div>
+
           <div class="stat-box">
             <p>Likes</p>
-            <h2>31% <span class="positive">+8%</span></h2>
+            <h2>
+              <span id="fb-likes">0</span>
+              <span id="fb-likes-change">0</span>
+            </h2>
           </div>
         </div>
 
         <div class="charts-grid">
           <div class="chart-box">
-            <p>Impressions</p>
-            <h2>2,800 impressions <span class="positive">+50</span></h2>
-            <div class="chart-line"></div>
+            <p>Reach</p>
+            <canvas id="fbReachChart"></canvas>
           </div>
+
           <div class="chart-box">
-            <p>Followers Gained</p>
-            <h2>3,000 followers <span class="positive">+100</span></h2>
-            <div class="chart-line"></div>
+            <p>Followers Growth</p>
+            <canvas id="fbFollowersChart"></canvas>
           </div>
         </div>
       </section>
     </main>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let fbFollowersChart = null;
+let fbReachChart = null;
+
+// ================= LOAD FACEBOOK DATA =================
+async function loadFacebookData() {
+  const res = await fetch("/api/facebook");
+  const data = await res.json();
+
+  updateBox("fb-followers","fb-followers-change",data.followers,data.followers_change);
+  updateBox("fb-reach","fb-reach-change",data.reach,data.reach_change);
+  updateBox("fb-engagement","fb-engagement-change",data.engagement_rate,data.engagement_change,"%");
+  updateBox("fb-likes","fb-likes-change",data.likes,data.likes_change);
+
+  fbFollowersChart = createChart(
+    "fbFollowersChart",
+    data.labels,
+    data.followers_graph,
+    fbFollowersChart
+  );
+
+  fbReachChart = createChart(
+    "fbReachChart",
+    data.labels,
+    data.reach_graph,
+    fbReachChart
+  );
+}
+
+// ================= UPDATE BOX =================
+function updateBox(valueId, changeId, value, change, suffix="") {
+  document.getElementById(valueId).innerText = value;
+
+  const el = document.getElementById(changeId);
+  el.innerText = (change >= 0 ? "+" : "") + change + suffix;
+
+  el.classList.remove("positive","negative");
+  el.classList.add(change >= 0 ? "positive" : "negative");
+}
+
+// ================= FACEBOOK CHART STYLE =================
+function createChart(id, labels, values, existingChart) {
+  if (existingChart) existingChart.destroy();
+
+  const ctx = document.getElementById(id).getContext("2d");
+
+  // Facebook blue gradient
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, "rgba(24,119,242,0.4)");
+  gradient.addColorStop(1, "rgba(24,119,242,0)");
+
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        borderColor: "#1877F2",
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "rgba(255,255,255,0.05)" } }
+      }
+    }
+  });
+}
+
+// ================= START =================
+loadFacebookData();
+setInterval(loadFacebookData, 10000);
+</script>
 </body>
 </html>

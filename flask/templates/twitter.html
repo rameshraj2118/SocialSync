@@ -63,39 +63,134 @@
           <a href="{{ url_for('twitter') }}"><button class="active">Twitter</button></a>
         </div>
 
-        <div class="stats-grid">
-          <div class="stat-box">
-            <p>Followers</p>
-            <h2>1432 <span class="positive">+57</span></h2>
-          </div>
-          <div class="stat-box">
-            <p>Impressions</p>
-            <h2>7,000 <span class="negative">-400</span></h2>
-          </div>
-          <div class="stat-box">
-            <p>Engagement rate</p>
-            <h2>23% <span class="positive">+12%</span></h2>
-          </div>
-          <div class="stat-box">
-            <p>Likes</p>
-            <h2>56% <span class="positive">+15%</span></h2>
-          </div>
+       <div class="stats-grid">
+
+      <div class="stat-box">
+          <p>Followers</p>
+          <h2>
+            <span id="tw-followers">0</span>
+            <span id="tw-followers-change">0</span>
+          </h2>
         </div>
+
+        <div class="stat-box">
+          <p>Impressions</p>
+          <h2>
+            <span id="tw-impressions">0</span>
+            <span id="tw-impressions-change">0</span>
+          </h2>
+        </div>
+
+        <div class="stat-box">
+          <p>Engagement Rate</p>
+          <h2>
+            <span id="tw-engagement">0</span>%
+            <span id="tw-engagement-change">0%</span>
+          </h2>
+        </div>
+
+        <div class="stat-box">
+          <p>Likes</p>
+          <h2>
+            <span id="tw-likes">0</span>
+            <span id="tw-likes-change">0</span>
+          </h2>
+        </div>
+      </div>
 
         <div class="charts-grid">
           <div class="chart-box">
             <p>Impressions</p>
-            <h2>7,000 impressions <span class="negative">-400</span></h2>
-            <div class="chart-line"></div>
+            <canvas id="twImpressionsChart"></canvas>
           </div>
           <div class="chart-box">
-            <p>Followers Gained</p>
-            <h2>1,432 followers <span class="positive">+57</span></h2>
-            <div class="chart-line"></div>
+            <p>Followers Growth</p>
+            <canvas id="twFollowersChart"></canvas>
           </div>
+        </div>
         </div>
       </section>
     </main>
   </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let twFollowersChart = null;
+let twImpressionsChart = null;
+
+// ================= LOAD TWITTER DATA =================
+async function loadTwitterData() {
+  const res = await fetch("/api/twitter");
+  const data = await res.json();
+
+  updateBox("tw-followers","tw-followers-change",data.followers,data.followers_change);
+  updateBox("tw-impressions","tw-impressions-change",data.impressions,data.impressions_change);
+  updateBox("tw-engagement","tw-engagement-change",data.engagement_rate,data.engagement_change,"%");
+  updateBox("tw-likes","tw-likes-change",data.likes,data.likes_change);
+
+  twFollowersChart = createChart(
+    "twFollowersChart",
+    data.labels,
+    data.followers_graph,
+    twFollowersChart
+  );
+
+  twImpressionsChart = createChart(
+    "twImpressionsChart",
+    data.labels,
+    data.impressions_graph,
+    twImpressionsChart
+  );
+}
+
+// ================= UPDATE BOX =================
+function updateBox(valueId, changeId, value, change, suffix="") {
+  document.getElementById(valueId).innerText = value;
+
+  const el = document.getElementById(changeId);
+  el.innerText = (change >= 0 ? "+" : "") + change + suffix;
+
+  el.classList.remove("positive","negative");
+  el.classList.add(change >= 0 ? "positive" : "negative");
+}
+
+// ================= TWITTER CHART STYLE =================
+function createChart(id, labels, values, existingChart) {
+  if (existingChart) existingChart.destroy();
+
+  const ctx = document.getElementById(id).getContext("2d");
+
+  // Grey gradient theme
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, "rgba(156,163,175,0.45)");
+  gradient.addColorStop(1, "rgba(156,163,175,0)");
+
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        borderColor: "#9ca3af",
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        borderWidth: 3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: "rgba(255,255,255,0.05)" } }
+      }
+    }
+  });
+}
+
+// ================= START =================
+loadTwitterData();
+setInterval(loadTwitterData, 10000);
+</script>
 </body>
 </html>
