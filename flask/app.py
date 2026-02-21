@@ -265,6 +265,33 @@ def signup():
     return render_template('signup.html')
 
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/services')
+def services():
+    return render_template('services.html')
+
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        email = (request.form.get('email') or '').strip()
+        message = (request.form.get('message') or '').strip()
+
+        if not name or not email or not message:
+            flash("Please fill out all contact form fields.", "danger")
+            return redirect(url_for('contact'))
+
+        flash("Thanks for contacting SocialSync. We'll get back to you soon.", "success")
+        return redirect(url_for('contact'))
+
+    return render_template('contact.html')
+
+
 @app.route('/home')
 def home():
     if 'user_id' not in session:
@@ -1161,9 +1188,6 @@ def delete_account():
 
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT profile_image FROM users WHERE id=?", (user_id,))
-    row = cursor.fetchone()
-    profile_image = row[0] if row else ""
     cursor.execute("DELETE FROM messages WHERE sender_id=? OR receiver_id=?", (user_id, user_id))
     cursor.execute("DELETE FROM campaigns WHERE user_id=?", (user_id,))
     cursor.execute("DELETE FROM posts WHERE user_id=?", (user_id,))
@@ -1173,14 +1197,6 @@ def delete_account():
     cursor.execute("DELETE FROM users WHERE id=?", (user_id,))
     conn.commit()
     conn.close()
-
-    if profile_image and profile_image.startswith("static/uploads/"):
-        full_path = os.path.join(app.root_path, profile_image)
-        if os.path.exists(full_path):
-            try:
-                os.remove(full_path)
-            except OSError:
-                pass
 
     session.clear()
     return jsonify({"message": "Account deleted"})

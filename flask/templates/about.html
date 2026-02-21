@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us | SocialSync</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='info.css') }}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SocialSync Logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('home') if session.get('user_id') else url_for('login') }}">Home</a></li>
+        <li><a href="{{ url_for('about') }}" class="active">About us</a></li>
+        <li><a href="{{ url_for('services') }}">Services</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="left">
+      <img src="{{ url_for('static', filename='images/social.png') }}" alt="Social Mesh Graphic" class="mesh-image">
+    </div>
+
+    <div class="right">
+      <section class="content-card">
+        <h1>About Us</h1>
+        <p>SocialSync helps creators and teams manage content, analytics, scheduling, and engagement from one dashboard.</p>
+        <p>Our goal is to make social media workflows simple, fast, and consistent across platforms.</p>
+        <div class="actions">
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('signup') }}">Sign Up</a>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

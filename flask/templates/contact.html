@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact | SocialSync</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='info.css') }}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SocialSync Logo">
+    </div>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('home') if session.get('user_id') else url_for('login') }}">Home</a></li>
+        <li><a href="{{ url_for('about') }}">About us</a></li>
+        <li><a href="{{ url_for('services') }}">Services</a></li>
+        <li><a href="{{ url_for('contact') }}" class="active">Contact</a></li>
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="left">
+      <img src="{{ url_for('static', filename='images/social.png') }}" alt="Social Mesh Graphic" class="mesh-image">
+    </div>
+
+    <div class="right">
+      <section class="content-card">
+        <h1>Contact</h1>
+        <p>Email: support@socialsync.com</p>
+        <p>Phone: +91 9876543210</p>
+        <p>Address: 123 SocialSync Ahmedabad</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('contact') }}" class="contact-form">
+          <label for="name">Full Name</label>
+          <input id="name" name="name" type="text" placeholder="Enter your full name" required>
+
+          <label for="email">Email Address</label>
+          <input id="email" name="email" type="email" placeholder="Enter your email" required>
+
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="5" placeholder="How can we help you?" required></textarea>
+
+          <button type="submit" class="submit-btn">Send Message</button>
+        </form>
+
+        <div class="actions">
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('signup') }}">Sign Up</a>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
