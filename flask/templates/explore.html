@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Explore</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='explore.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='user-preferences.css') }}">
+  <script src="{{ url_for('static', filename='user-preferences.js') }}" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <img src="static/images/logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('explore') }}">Explore</a></li>
+        <li><a href="{{ url_for('live') }}">Live</a></li>
+        <li><a href="{{ url_for('trends') }}">Trends</a></li>
+        <li>Notifications</li>
+        <img class="avatar" src="static/images/pfp.jpg" alt="img">
+      </ul>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">{{ session.username }}</p>
+          <p class="handle">@{{ session.handle }}</p>
+        </div>
+        <nav>
+          <ul>
+            <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
+            <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i> Posts</li></a>
+            <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+            <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
+            <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
+            <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
+          </ul>
+        </nav>
+      </div>
+      <a href="{{ url_for('login') }}"><button class="logout-btn">Log Out</button></a>
+    </aside>
+
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Explore</h1>
+        <p class="subtext">Discover trending creators, hashtags, and ideas.</p>
+
+        <h2 class="section-title">Trending Creators</h2>
+        <div class="creator-grid">
+          <article class="creator-card">
+            <div class="creator-main">
+              <img src="https://i.pravatar.cc/72?img=47" alt="Maya Reels">
+              <div>
+                <h3>Maya Reels</h3>
+                <p>@maya.reels</p>
+              </div>
+            </div>
+            <span class="growth-pill"><i class="fa-solid fa-arrow-trend-up"></i> +12.4%</span>
+          </article>
+
+          <article class="creator-card">
+            <div class="creator-main">
+              <img src="https://i.pravatar.cc/72?img=12" alt="CodeWithArun">
+              <div>
+                <h3>CodeWithArun</h3>
+                <p>@codewitharun</p>
+              </div>
+            </div>
+            <span class="growth-pill"><i class="fa-solid fa-arrow-trend-up"></i> +9.1%</span>
+          </article>
+
+          <article class="creator-card">
+            <div class="creator-main">
+              <img src="https://i.pravatar.cc/72?img=16" alt="FitNova">
+              <div>
+                <h3>FitNova</h3>
+                <p>@fitnova</p>
+              </div>
+            </div>
+            <span class="growth-pill"><i class="fa-solid fa-arrow-trend-up"></i> +7.8%</span>
+          </article>
+        </div>
+
+        <h2 class="section-title">Trending Hashtags</h2>
+        <div class="tag-wrap">
+          <span>#buildinpublic</span>
+          <span>#weekendvibes</span>
+          <span>#reeltips</span>
+          <span>#smallbusiness</span>
+          <span>#aiworkflow</span>
+          <span>#productdesign</span>
+        </div>
+
+        <h2 class="section-title">Content Ideas</h2>
+        <div class="ideas">
+          <div class="idea-row">
+            <div class="idea-icon icon-blue"><i class="fa-solid fa-video"></i></div>
+            <div class="idea-copy">
+              <h4>Behind-the-scenes video of your workflow</h4>
+              <p>Perfect for: Reels, TikTok</p>
+            </div>
+            <i class="fa-solid fa-chevron-right idea-arrow"></i>
+          </div>
+
+          <div class="idea-row">
+            <div class="idea-icon icon-amber"><i class="fa-regular fa-image"></i></div>
+            <div class="idea-copy">
+              <h4>Before/after customer transformation post</h4>
+              <p>Perfect for: Instagram Carousel</p>
+            </div>
+            <i class="fa-solid fa-chevron-right idea-arrow"></i>
+          </div>
+
+          <div class="idea-row">
+            <div class="idea-icon icon-rose"><i class="fa-solid fa-bolt"></i></div>
+            <div class="idea-copy">
+              <h4>Quick 30s tutorial with one clear tip</h4>
+              <p>Perfect for: YouTube Shorts, Reels</p>
+            </div>
+            <i class="fa-solid fa-chevron-right idea-arrow"></i>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
+
+

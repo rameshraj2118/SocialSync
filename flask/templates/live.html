@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SocialSync Live</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='live.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='user-preferences.css') }}">
+  <script src="{{ url_for('static', filename='user-preferences.js') }}" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="logo">
+        <img src="static/images/logo.png" alt="SocialSync Logo">
+      </div>
+      <ul class="menu">
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('explore') }}">Explore</a></li>
+        <li><a href="{{ url_for('live') }}">Live</a></li>
+        <li><a href="{{ url_for('trends') }}">Trends</a></li>
+        <li>Notifications</li>
+        <img class="avatar" src="static/images/pfp.jpg" alt="img">
+      </ul>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <div class="user-info">
+          <p class="username">{{ session.username }}</p>
+          <p class="handle">@{{ session.handle }}</p>
+        </div>
+        <nav>
+          <ul>
+            <a href="{{ url_for('home') }}"><li><i class="fa-solid fa-chart-simple"></i> Analytics</li></a>
+            <a href="{{ url_for('post') }}"><li><i class="fa-solid fa-plus"></i> Posts</li></a>
+            <a href="{{ url_for('schedule') }}"><li><i class="fa-solid fa-calendar-days"></i> Schedule</li></a>
+            <a href="{{ url_for('ads') }}"><li><i class="fa-solid fa-bullhorn"></i> Ads</li></a>
+            <a href="{{ url_for('inbox') }}"><li><i class="fa-regular fa-comment-dots"></i> Inbox</li></a>
+            <a href="{{ url_for('settings') }}"><li><i class="fa-solid fa-gear"></i> Settings</li></a>
+          </ul>
+        </nav>
+      </div>
+      <a href="{{ url_for('login') }}"><button class="logout-btn">Log Out</button></a>
+    </aside>
+
+    <main class="main">
+      <section class="content">
+        <h1 class="aly">Live</h1>
+        <p class="subtext">Track your live hours and discover creators currently live.</p>
+
+        <div class="live-stats">
+          <div class="live-card">
+            <p class="label">Your Total Live Time</p>
+            <h2 id="totalLiveHours">0.00h</h2>
+          </div>
+          <div class="live-card">
+            <p class="label">Current Status</p>
+            <h2 id="liveStatus">Offline</h2>
+          </div>
+          <div class="live-card actions">
+            <p class="label">Live Control</p>
+            <button id="liveToggleBtn" class="live-btn">Go Live</button>
+          </div>
+        </div>
+
+        <h2 class="section-title">Creators Live Now</h2>
+        <div id="liveCreatorsList" class="creators-list">
+          <p class="empty">Loading live creators...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function avatarUrl(name) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1f6feb&color=ffffff`;
+    }
+
+    function formatStartedAgo(timestamp) {
+      if (!timestamp) return "Live now";
+      const started = new Date(timestamp.replace(" ", "T"));
+      const now = new Date();
+      const diffMin = Math.max(0, Math.floor((now - started) / 60000));
+      if (diffMin < 1) return "Started just now";
+      if (diffMin < 60) return `Started ${diffMin}m ago`;
+      const h = Math.floor(diffMin / 60);
+      const m = diffMin % 60;
+      return `Started ${h}h ${m}m ago`;
+    }
+
+    async function loadLiveSummary() {
+      try {
+        const res = await fetch("/api/live/summary");
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+
+        document.getElementById("totalLiveHours").textContent = `${Number(data.total_hours || 0).toFixed(2)}h`;
+        document.getElementById("liveStatus").textContent = data.currently_live ? "Live Now" : "Offline";
+        const btn = document.getElementById("liveToggleBtn");
+        btn.textContent = data.currently_live ? "End Live" : "Go Live";
+        btn.classList.toggle("is-live", !!data.currently_live);
+      } catch (err) {
+        document.getElementById("liveStatus").textContent = "Unavailable";
+      }
+    }
+
+    async function loadLiveCreators() {
+      const list = document.getElementById("liveCreatorsList");
+      list.innerHTML = "<p class='empty'>Loading live creators...</p>";
+      try {
+        const res = await fetch("/api/live/creators");
+        if (!res.ok) throw new Error("Failed");
+        const creators = await res.json();
+
+        if (!creators.length) {
+          list.innerHTML = "<p class='empty'>No creators are live right now.</p>";
+          return;
+        }
+
+        list.innerHTML = creators.map((creator) => `
+          <article class="creator-row">
+            <div class="creator-left">
+              <img src="${avatarUrl(creator.username)}" alt="${creator.username}">
+              <div>
+                <h3>${creator.username}</h3>
+                <p>@${creator.username.toLowerCase().replace(/\s+/g, "")}</p>
+              </div>
+            </div>
+            <div class="creator-right">
+              <span class="live-pill">LIVE</span>
+              <small>${formatStartedAgo(creator.started_at)}</small>
+            </div>
+          </article>
+        `).join("");
+      } catch (err) {
+        list.innerHTML = "<p class='empty'>Could not load live creators.</p>";
+      }
+    }
+
+    async function toggleLive() {
+      const btn = document.getElementById("liveToggleBtn");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/live/toggle", { method: "POST" });
+        if (!res.ok) throw new Error("Failed");
+        await loadLiveSummary();
+        await loadLiveCreators();
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById("liveToggleBtn").addEventListener("click", toggleLive);
+    loadLiveSummary();
+    loadLiveCreators();
+    setInterval(loadLiveCreators, 30000);
+    setInterval(loadLiveSummary, 30000);
+  </script>
+</body>
+</html>
+

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SocialSync Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='user-preferences.css') }}">
+  <script src="{{ url_for('static', filename='user-preferences.js') }}" defer></script>
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -17,10 +19,10 @@
         <img src="static/images/logo.png" alt="SocialSync Logo">
       </div>
       <ul class="menu">
-        <li class="menu-list">Home</li>
-        <li class="menu-list">Explore</li>
-        <li class="menu-list">Live</li>
-        <li class="menu-list">Trends</li>
+        <li class="menu-list"><a href="{{ url_for('home') }}">Home</a></li>
+        <li class="menu-list"><a href="{{ url_for('explore') }}">Explore</a></li>
+        <li class="menu-list"><a href="{{ url_for('live') }}">Live</a></li>
+        <li class="menu-list"><a href="{{ url_for('trends') }}">Trends</a></li>
         <li class="menu-list">Notifications</li>
         <img class="avatar" src="static/images/pfp.jpg" alt="img">
       </ul>
@@ -194,3 +196,7 @@ setInterval(loadTwitterData, 10000);
 </script>
 </body>
 </html>
+
+
+
+

@@ -1,0 +1,143 @@
+@import url('home.css');
+
+.content {
+  max-width: 1080px;
+}
+
+.section-title {
+  margin: 24px 0 14px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.creator-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.creator-card {
+  background: #15222E;
+  border: 1px solid #3d3d3d;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.creator-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.creator-main img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.creator-main h3 {
+  margin: 0;
+  font-size: 1.7rem;
+}
+
+.creator-main p {
+  margin: 4px 0 0;
+  color: #8b9fb4;
+  font-size: 1rem;
+}
+
+.growth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #2bd48f;
+  background: rgba(27, 148, 102, 0.2);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.tag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-wrap span {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #3d3d3d;
+  background: #15222E;
+  color: #c9d1d9;
+  font-size: 0.95rem;
+}
+
+.ideas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.idea-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #15222E;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.idea-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.icon-blue {
+  color: #8ba5ff;
+  background: rgba(87, 100, 221, 0.25);
+}
+
+.icon-amber {
+  color: #f7c445;
+  background: rgba(168, 125, 39, 0.25);
+}
+
+.icon-rose {
+  color: #f77795;
+  background: rgba(163, 64, 95, 0.25);
+}
+
+.idea-copy {
+  flex: 1;
+}
+
+.idea-copy h4 {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.idea-copy p {
+  margin: 0;
+  color: #8b9fb4;
+  font-size: 0.95rem;
+}
+
+.idea-arrow {
+  color: #8b9fb4;
+}
+
+@media (max-width: 1024px) {
+  .creator-grid {
+    grid-template-columns: 1fr;
+  }
+}

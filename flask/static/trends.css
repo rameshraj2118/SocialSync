@@ -1,0 +1,112 @@
+@import url('home.css');
+
+.content {
+  max-width: 1100px;
+}
+
+.trend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 0 18px;
+}
+
+.trend-header p {
+  color: #8b9fb4;
+}
+
+.refresh-btn {
+  border: none;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.trending-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trend-card {
+  background: #15222E;
+  border: 1px solid #3d3d3d;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.creator-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.creator-top img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.creator-top h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.creator-top p {
+  margin: 3px 0 0;
+  color: #8b9fb4;
+}
+
+.bio {
+  color: #c9d1d9;
+  min-height: 36px;
+}
+
+.creator-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #3d3d3d;
+}
+
+.score-pill {
+  color: #2bd48f;
+  background: rgba(27, 148, 102, 0.18);
+}
+
+.platform-pill {
+  color: #9ac1ff;
+  background: rgba(31, 111, 235, 0.14);
+}
+
+.follow-pill {
+  color: #c9d1d9;
+  background: #1a2835;
+}
+
+.profile-link {
+  margin-top: auto;
+  color: #93c5fd;
+}
+
+.empty {
+  color: #8b9fb4;
+  padding: 12px 0;
+}
+
+@media (max-width: 1024px) {
+  .trending-grid {
+    grid-template-columns: 1fr;
+  }
+}

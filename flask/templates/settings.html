@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SocialSync Settings</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='user-preferences.css') }}">
+  <script src="{{ url_for('static', filename='user-preferences.js') }}" defer></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -15,14 +17,14 @@
         <img src="static/images/logo.png" alt="SocialSync Logo">
       </div>
       <ul class="menu">
-        <li>Home</li>
-        <li>Explore</li>
-        <li>Live</li>
-        <li>Trends</li>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('explore') }}">Explore</a></li>
+        <li><a href="{{ url_for('live') }}">Live</a></li>
+        <li><a href="{{ url_for('trends') }}">Trends</a></li>
         <li>Notifications</li>
+        <img class="avatar" src="static/images/pfp.jpg" alt="img">
       </ul>
     </div>
-    <div class="avatar"></div>
   </header>
 
   <div class="layout">
@@ -50,12 +52,12 @@
     <!-- MAIN CONTENT -->
     <main class="main">
       <section class="content">
-        <h1 class="aly">Settings</h1>
-        <p class="subtext">Manage your account and preferences</p>
+        <h1 class="aly" id="settingsTitle">Settings</h1>
+        <p class="subtext" id="settingsSubtext">Manage your account and preferences</p>
 
         <!-- Search bar -->
         <div class="search-bar">
-          <input type="text" placeholder="Search settings...">
+          <input type="text" id="settingsSearchInput" placeholder="Search settings...">
           <i class="fa-solid fa-search"></i>
         </div>
 
@@ -63,24 +65,24 @@
         <div class="settings-container">
           <!-- General -->
           <div class="settings-group">
-            <h3>General</h3>
+            <h3 id="generalGroupTitle">General</h3>
             <div class="setting-item">
-              <span>Appearance</span>
+              <span id="appearanceLabel">Appearance</span>
               <button class="option-btn" id="appearanceBtn">Dark</button>
             </div>
             <div class="setting-item">
-              <span>Language</span>
+              <span id="languageLabel">Language</span>
               <button class="option-btn" id="languageBtn">English</button>
             </div>
             <div class="setting-item">
-              <span>Font Size</span>
+              <span id="fontSizeLabel">Font Size</span>
               <button class="option-btn" id="fontBtn">Medium</button>
             </div>
           </div>
 
           <!-- Notifications -->
           <div class="settings-group">
-            <h3>Notifications</h3>
+            <h3 id="notificationsGroupTitle">Notifications</h3>
             <div class="setting-item">
               <span>Email Notifications</span>
               <label class="switch">
@@ -106,40 +108,155 @@
 
           <!-- Privacy -->
           <div class="settings-group">
-            <h3>Privacy</h3>
+            <h3 id="privacyGroupTitle">Privacy</h3>
             <div class="setting-item">
               <span>Profile Visibility</span>
-              <button class="option-btn">Friends Only</button>
+              <button class="option-btn" id="profileVisibilityBtn">Friends Only</button>
             </div>
             <div class="setting-item">
               <span>Direct Messages</span>
-              <button class="option-btn">Everyone</button>
+              <button class="option-btn" id="directMessagesBtn">Everyone</button>
             </div>
             <div class="setting-item">
               <span>Blocked Users</span>
-              <button class="option-btn">Manage</button>
+              <button class="option-btn" id="blockedUsersBtn">Manage</button>
             </div>
           </div>
 
           <!-- Account -->
           <div class="settings-group">
-            <h3>Account</h3>
+            <h3 id="accountGroupTitle">Account</h3>
             <div class="setting-item">
               <span>Account Information</span>
-              <button class="option-btn">Edit</button>
+              <button class="option-btn" id="accountInfoBtn">Edit</button>
             </div>
             <div class="setting-item">
               <span>Change Password</span>
-              <button class="option-btn">Change</button>
+              <button class="option-btn" id="changePasswordBtn">Change</button>
+            </div>
+            <div class="setting-item">
+              <span>Profile Picture</span>
+              <button class="option-btn" id="profilePhotoBtn">Upload</button>
             </div>
             <div class="setting-item">
               <span>Deactivate/Delete Account</span>
-              <button class="option-btn">Manage</button>
+              <button class="option-btn" id="accountDangerBtn">Manage</button>
             </div>
           </div>
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="account-modal-overlay" id="accountInfoModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3>Account Information</h3>
+        <button class="account-modal-close" data-close="#accountInfoModal">&times;</button>
+      </div>
+      <label class="account-field-label" for="accountUsernameInput">Username</label>
+      <input class="account-input" id="accountUsernameInput" type="text" />
+      <label class="account-field-label" for="accountEmailInput">Email</label>
+      <input class="account-input" id="accountEmailInput" type="email" />
+      <p class="account-status" id="accountInfoStatus"></p>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#accountInfoModal">Cancel</button>
+        <button class="account-primary-btn" id="saveAccountInfoBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-modal-overlay" id="passwordModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3>Change Password</h3>
+        <button class="account-modal-close" data-close="#passwordModal">&times;</button>
+      </div>
+      <label class="account-field-label" for="currentPasswordInput">Current password</label>
+      <input class="account-input" id="currentPasswordInput" type="password" />
+      <label class="account-field-label" for="newPasswordInput">New password</label>
+      <input class="account-input" id="newPasswordInput" type="password" />
+      <label class="account-field-label" for="confirmPasswordInput">Confirm new password</label>
+      <input class="account-input" id="confirmPasswordInput" type="password" />
+      <p class="account-status" id="passwordStatus"></p>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#passwordModal">Cancel</button>
+        <button class="account-primary-btn" id="savePasswordBtn">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-modal-overlay" id="dangerModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3>Account Management</h3>
+        <button class="account-modal-close" data-close="#dangerModal">&times;</button>
+      </div>
+      <p class="account-danger-text">Deactivate will sign you out and block future login until reactivated.</p>
+      <p class="account-danger-text">Delete permanently removes your account and related data.</p>
+      <p class="account-status" id="dangerStatus"></p>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#dangerModal">Cancel</button>
+        <button class="account-danger-btn" id="deactivateAccountBtn">Deactivate</button>
+        <button class="account-danger-btn" id="deleteAccountBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-modal-overlay" id="profilePhotoModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3>Profile Picture</h3>
+        <button class="account-modal-close" data-close="#profilePhotoModal">&times;</button>
+      </div>
+      <div class="profile-photo-preview-wrap">
+        <img id="profilePhotoPreview" class="profile-photo-preview" src="static/images/pfp.jpg" alt="Profile picture preview" />
+      </div>
+      <label class="account-field-label" for="profilePhotoInput">Choose image</label>
+      <input class="account-input" id="profilePhotoInput" type="file" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" />
+      <div class="profile-crop-wrap">
+        <canvas id="profileCropCanvas" width="280" height="280"></canvas>
+      </div>
+      <label class="account-field-label" for="profileCropZoom">Zoom</label>
+      <input id="profileCropZoom" class="crop-zoom-input" type="range" min="1" max="3" step="0.01" value="1" />
+      <p class="account-status" id="profilePhotoStatus"></p>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#profilePhotoModal">Cancel</button>
+        <button class="account-primary-btn" id="uploadProfilePhotoBtn">Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-modal-overlay" id="generalOptionModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3 id="generalOptionTitle">Select Option</h3>
+        <button class="account-modal-close" data-close="#generalOptionModal">&times;</button>
+      </div>
+      <div id="generalOptionList" class="general-option-list"></div>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#generalOptionModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="account-modal-overlay" id="blockedUsersModal">
+    <div class="account-modal-card">
+      <div class="account-modal-header">
+        <h3>Blocked Users</h3>
+        <button class="account-modal-close" data-close="#blockedUsersModal">&times;</button>
+      </div>
+      <label class="account-field-label" for="blockUserSelect">Block a user</label>
+      <div class="blocked-controls">
+        <select class="account-input" id="blockUserSelect"></select>
+        <button class="account-danger-btn" id="blockUserBtn" type="button">Block</button>
+      </div>
+      <p class="account-status" id="blockedUsersStatus"></p>
+      <div id="blockedUsersList" class="blocked-users-list"></div>
+      <div class="account-modal-actions">
+        <button class="account-secondary-btn" data-close="#blockedUsersModal">Close</button>
+      </div>
+    </div>
   </div>
 <script>
 // Load saved settings
@@ -155,6 +272,11 @@ async function loadSettings() {
     document.getElementById("emailNotifications").checked = data.email_notifications;
     document.getElementById("pushNotifications").checked = data.push_notifications;
     document.getElementById("inAppNotifications").checked = data.inapp_notifications;
+    document.getElementById("profileVisibilityBtn").innerText = data.profile_visibility;
+    document.getElementById("directMessagesBtn").innerText = data.direct_messages;
+    applyAppearance(data.appearance);
+    applyFontSize(data.font_size);
+    applyLanguage(data.language);
 
   } catch(err) {
     console.log("Settings load error:", err);
@@ -170,8 +292,8 @@ async function saveSettings() {
     email_notifications: document.getElementById("emailNotifications").checked,
     push_notifications: document.getElementById("pushNotifications").checked,
     inapp_notifications: document.getElementById("inAppNotifications").checked,
-    profile_visibility: "Friends Only",
-    direct_messages: "Everyone"
+    profile_visibility: document.getElementById("profileVisibilityBtn").innerText,
+    direct_messages: document.getElementById("directMessagesBtn").innerText
   };
 
   await fetch("/api/settings", {
@@ -179,6 +301,12 @@ async function saveSettings() {
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(settings)
   });
+
+  try {
+    localStorage.setItem("socialsync_user_preferences", JSON.stringify(settings));
+  } catch (err) {
+    console.log("Preference cache error:", err);
+  }
 }
 
 // auto save on change
@@ -187,6 +315,598 @@ document.addEventListener("change", saveSettings);
 // load when page opens
 document.addEventListener("DOMContentLoaded", loadSettings);
 
+function openModal(modalId) {
+  document.querySelector(modalId).style.display = "flex";
+}
+
+function closeModal(modalId) {
+  document.querySelector(modalId).style.display = "none";
+}
+
+let currentGeneralSettingKey = "";
+const generalSettingMeta = {
+  appearance: {
+    buttonId: "appearanceBtn",
+    title: "Appearance",
+    options: ["Dark", "Light"]
+  },
+  language: {
+    buttonId: "languageBtn",
+    title: "Language",
+    options: ["English", "Hindi", "Spanish"]
+  },
+  font_size: {
+    buttonId: "fontBtn",
+    title: "Font Size",
+    options: ["Small", "Medium", "Large"]
+  },
+  profile_visibility: {
+    buttonId: "profileVisibilityBtn",
+    title: "Profile Visibility",
+    options: ["Public", "Friends Only", "Private"]
+  },
+  direct_messages: {
+    buttonId: "directMessagesBtn",
+    title: "Direct Messages",
+    options: ["Everyone", "Friends Only", "No One"]
+  }
+};
+
+const languageMap = {
+  English: {
+    settingsTitle: "Settings",
+    settingsSubtext: "Manage your account and preferences",
+    settingsSearchInput: "Search settings...",
+    generalGroupTitle: "General",
+    appearanceLabel: "Appearance",
+    languageLabel: "Language",
+    fontSizeLabel: "Font Size",
+    notificationsGroupTitle: "Notifications",
+    privacyGroupTitle: "Privacy",
+    accountGroupTitle: "Account"
+  },
+  Hindi: {
+    settingsTitle: "सेटिंग्स",
+    settingsSubtext: "अपना अकाउंट और प्राथमिकताएं मैनेज करें",
+    settingsSearchInput: "सेटिंग्स खोजें...",
+    generalGroupTitle: "सामान्य",
+    appearanceLabel: "थीम",
+    languageLabel: "भाषा",
+    fontSizeLabel: "फ़ॉन्ट आकार",
+    notificationsGroupTitle: "सूचनाएं",
+    privacyGroupTitle: "गोपनीयता",
+    accountGroupTitle: "अकाउंट"
+  },
+  Spanish: {
+    settingsTitle: "Configuracion",
+    settingsSubtext: "Administra tu cuenta y preferencias",
+    settingsSearchInput: "Buscar configuracion...",
+    generalGroupTitle: "General",
+    appearanceLabel: "Apariencia",
+    languageLabel: "Idioma",
+    fontSizeLabel: "Tamano de fuente",
+    notificationsGroupTitle: "Notificaciones",
+    privacyGroupTitle: "Privacidad",
+    accountGroupTitle: "Cuenta"
+  }
+};
+
+function applyAppearance(appearance) {
+  const value = String(appearance || "Dark").toLowerCase();
+  document.body.setAttribute("data-theme", value === "light" ? "light" : "dark");
+}
+
+function applyFontSize(size) {
+  const normalized = String(size || "Medium").toLowerCase();
+  const allowed = ["small", "medium", "large"];
+  document.body.setAttribute("data-font-size", allowed.includes(normalized) ? normalized : "medium");
+}
+
+function applyLanguage(language) {
+  const dict = languageMap[language] || languageMap.English;
+  Object.keys(dict).forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id === "settingsSearchInput") {
+      el.placeholder = dict[id];
+    } else {
+      el.textContent = dict[id];
+    }
+  });
+}
+
+function setStatus(elId, text, isError = false) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.style.color = isError ? "#ef4444" : "#22c55e";
+}
+
+function openGeneralSettingModal(settingKey) {
+  const meta = generalSettingMeta[settingKey];
+  if (!meta) return;
+
+  currentGeneralSettingKey = settingKey;
+  document.getElementById("generalOptionTitle").innerText = `Select ${meta.title}`;
+
+  const list = document.getElementById("generalOptionList");
+  const currentValue = document.getElementById(meta.buttonId).innerText.trim();
+  list.innerHTML = meta.options.map((option) => `
+    <button class="general-option-btn ${option === currentValue ? "selected" : ""}" type="button" data-option="${option}">
+      ${option}
+    </button>
+  `).join("");
+
+  list.querySelectorAll(".general-option-btn").forEach((btn) => {
+    btn.addEventListener("click", () => applyGeneralSetting(btn.getAttribute("data-option")));
+  });
+
+  openModal("#generalOptionModal");
+}
+
+async function applyGeneralSetting(value) {
+  const meta = generalSettingMeta[currentGeneralSettingKey];
+  if (!meta) return;
+
+  document.getElementById(meta.buttonId).innerText = value;
+  if (currentGeneralSettingKey === "appearance") applyAppearance(value);
+  if (currentGeneralSettingKey === "font_size") applyFontSize(value);
+  if (currentGeneralSettingKey === "language") applyLanguage(value);
+  await saveSettings();
+  closeModal("#generalOptionModal");
+}
+
+function renderBlockedUsers(blockedUsers) {
+  const list = document.getElementById("blockedUsersList");
+  if (!blockedUsers.length) {
+    list.innerHTML = "<p class='empty-blocked'>No blocked users.</p>";
+    return;
+  }
+
+  list.innerHTML = blockedUsers.map((user) => `
+    <div class="blocked-user-row">
+      <span>${user.username}</span>
+      <button class="account-secondary-btn unblock-user-btn" data-user-id="${user.id}" type="button">Unblock</button>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".unblock-user-btn").forEach((btn) => {
+    btn.addEventListener("click", () => unblockUser(btn.getAttribute("data-user-id")));
+  });
+}
+
+async function loadBlockedUsersModalData() {
+  const statusId = "blockedUsersStatus";
+  setStatus(statusId, "");
+
+  try {
+    const [allUsersRes, blockedUsersRes] = await Promise.all([
+      fetch("/api/inbox/users"),
+      fetch("/api/privacy/blocked")
+    ]);
+
+    if (!allUsersRes.ok || !blockedUsersRes.ok) throw new Error("Could not load users");
+
+    const allUsers = await allUsersRes.json();
+    const blockedUsers = await blockedUsersRes.json();
+    const blockedIds = new Set(blockedUsers.map((user) => user.id));
+
+    const select = document.getElementById("blockUserSelect");
+    const availableUsers = allUsers.filter((user) => !blockedIds.has(user.id));
+    if (!availableUsers.length) {
+      select.innerHTML = "<option value=''>No users available</option>";
+      select.disabled = true;
+      document.getElementById("blockUserBtn").disabled = true;
+    } else {
+      select.disabled = false;
+      document.getElementById("blockUserBtn").disabled = false;
+      select.innerHTML = availableUsers.map((user) => `
+        <option value="${user.id}">${user.username}</option>
+      `).join("");
+    }
+
+    renderBlockedUsers(blockedUsers);
+  } catch (err) {
+    setStatus(statusId, err.message || "Could not load blocked users.", true);
+  }
+}
+
+async function openBlockedUsersModal() {
+  openModal("#blockedUsersModal");
+  await loadBlockedUsersModalData();
+}
+
+async function blockSelectedUser() {
+  const select = document.getElementById("blockUserSelect");
+  const blocked_user_id = select.value;
+  if (!blocked_user_id) return;
+
+  try {
+    const res = await fetch("/api/privacy/blocked", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ blocked_user_id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not block user");
+    setStatus("blockedUsersStatus", "User blocked.");
+    await loadBlockedUsersModalData();
+  } catch (err) {
+    setStatus("blockedUsersStatus", err.message, true);
+  }
+}
+
+async function unblockUser(userId) {
+  try {
+    const res = await fetch(`/api/privacy/blocked/${userId}`, {
+      method: "DELETE"
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Could not unblock user");
+    setStatus("blockedUsersStatus", "User unblocked.");
+    await loadBlockedUsersModalData();
+  } catch (err) {
+    setStatus("blockedUsersStatus", err.message, true);
+  }
+}
+
+function normalizeProfileImagePath(path) {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/")) return path;
+  return `/${path}`;
+}
+
+let cropImage = null;
+let cropScale = 1;
+let cropOffsetX = 0;
+let cropOffsetY = 0;
+let cropDragging = false;
+let cropDragStartX = 0;
+let cropDragStartY = 0;
+
+function getCropCanvas() {
+  return document.getElementById("profileCropCanvas");
+}
+
+function drawCropCanvas() {
+  const canvas = getCropCanvas();
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0f1720";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!cropImage) return;
+
+  const drawW = cropImage.width * cropScale;
+  const drawH = cropImage.height * cropScale;
+  const x = (canvas.width - drawW) / 2 + cropOffsetX;
+  const y = (canvas.height - drawH) / 2 + cropOffsetY;
+  ctx.drawImage(cropImage, x, y, drawW, drawH);
+}
+
+function clampCropOffsets() {
+  const canvas = getCropCanvas();
+  if (!canvas || !cropImage) return;
+  const drawW = cropImage.width * cropScale;
+  const drawH = cropImage.height * cropScale;
+  const maxX = Math.max(0, (drawW - canvas.width) / 2);
+  const maxY = Math.max(0, (drawH - canvas.height) / 2);
+  cropOffsetX = Math.min(maxX, Math.max(-maxX, cropOffsetX));
+  cropOffsetY = Math.min(maxY, Math.max(-maxY, cropOffsetY));
+}
+
+function initCropFromFile(file) {
+  const preview = document.getElementById("profilePhotoPreview");
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      cropImage = img;
+      const canvas = getCropCanvas();
+      const zoomInput = document.getElementById("profileCropZoom");
+      if (!canvas || !zoomInput) return;
+
+      const minScale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      cropScale = minScale;
+      zoomInput.min = String(minScale);
+      zoomInput.max = String(Math.max(minScale * 3, minScale + 0.01));
+      zoomInput.value = String(minScale);
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      drawCropCanvas();
+      preview.src = reader.result;
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function canvasPointerPosition(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+}
+
+function makeCroppedBlob() {
+  return new Promise((resolve) => {
+    const canvas = getCropCanvas();
+    if (!canvas || !cropImage) {
+      resolve(null);
+      return;
+    }
+
+    const out = document.createElement("canvas");
+    out.width = 600;
+    out.height = 600;
+    const ctx = out.getContext("2d");
+    if (!ctx) {
+      resolve(null);
+      return;
+    }
+
+    const drawW = cropImage.width * cropScale;
+    const drawH = cropImage.height * cropScale;
+    const x = (canvas.width - drawW) / 2 + cropOffsetX;
+    const y = (canvas.height - drawH) / 2 + cropOffsetY;
+
+    const scaleToOutput = out.width / canvas.width;
+    ctx.fillStyle = "#0f1720";
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(
+      cropImage,
+      x * scaleToOutput,
+      y * scaleToOutput,
+      drawW * scaleToOutput,
+      drawH * scaleToOutput
+    );
+
+    out.toBlob((blob) => resolve(blob), "image/jpeg", 0.92);
+  });
+}
+
+function refreshTopAvatar(path) {
+  const avatar = document.querySelector(".top-nav .avatar");
+  if (!avatar) return;
+
+  const imagePath = normalizeProfileImagePath(path);
+  if (!imagePath) return;
+
+  if (avatar.tagName === "IMG") {
+    avatar.src = imagePath;
+  } else {
+    avatar.style.backgroundImage = `url('${imagePath}')`;
+    avatar.style.backgroundSize = "cover";
+    avatar.style.backgroundPosition = "center";
+  }
+}
+
+async function openProfilePhotoModal() {
+  const input = document.getElementById("profilePhotoInput");
+  const zoomInput = document.getElementById("profileCropZoom");
+  input.value = "";
+  zoomInput.value = "1";
+  setStatus("profilePhotoStatus", "");
+  cropImage = null;
+  cropScale = 1;
+  cropOffsetX = 0;
+  cropOffsetY = 0;
+  drawCropCanvas();
+
+  try {
+    const res = await fetch("/api/account/info");
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+    const preview = document.getElementById("profilePhotoPreview");
+    const imagePath = normalizeProfileImagePath(data.profile_image);
+    preview.src = imagePath || "static/images/pfp.jpg";
+  } catch (err) {
+    setStatus("profilePhotoStatus", "Could not load current photo.", true);
+  }
+
+  openModal("#profilePhotoModal");
+}
+
+async function uploadProfilePhoto() {
+  const input = document.getElementById("profilePhotoInput");
+  const file = input.files && input.files[0];
+
+  if (!file) {
+    setStatus("profilePhotoStatus", "Please choose an image file.", true);
+    return;
+  }
+
+  const croppedBlob = await makeCroppedBlob();
+  if (!croppedBlob) {
+    setStatus("profilePhotoStatus", "Could not crop image.", true);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("profile_photo", croppedBlob, "profile.jpg");
+
+  try {
+    const res = await fetch("/api/account/profile-photo", {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upload failed");
+
+    const imagePath = normalizeProfileImagePath(data.profile_image);
+    document.getElementById("profilePhotoPreview").src = imagePath;
+    refreshTopAvatar(imagePath);
+    setStatus("profilePhotoStatus", "Profile picture updated.");
+    closeModal("#profilePhotoModal");
+  } catch (err) {
+    setStatus("profilePhotoStatus", err.message, true);
+  }
+}
+
+async function openAccountInfoModal() {
+  setStatus("accountInfoStatus", "");
+  try {
+    const res = await fetch("/api/account/info");
+    if (!res.ok) throw new Error("Failed");
+    const data = await res.json();
+    document.getElementById("accountUsernameInput").value = data.username || "";
+    document.getElementById("accountEmailInput").value = data.email || "";
+  } catch (err) {
+    setStatus("accountInfoStatus", "Could not load account data.", true);
+  }
+  openModal("#accountInfoModal");
+}
+
+async function saveAccountInfo() {
+  const username = document.getElementById("accountUsernameInput").value.trim();
+  const email = document.getElementById("accountEmailInput").value.trim();
+
+  if (!username || !email) {
+    setStatus("accountInfoStatus", "Username and email are required.", true);
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/account/info", {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({username, email})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Update failed");
+    setStatus("accountInfoStatus", "Account information updated.");
+    setTimeout(() => window.location.reload(), 500);
+  } catch (err) {
+    setStatus("accountInfoStatus", err.message, true);
+  }
+}
+
+function openPasswordModal() {
+  document.getElementById("currentPasswordInput").value = "";
+  document.getElementById("newPasswordInput").value = "";
+  document.getElementById("confirmPasswordInput").value = "";
+  setStatus("passwordStatus", "");
+  openModal("#passwordModal");
+}
+
+async function savePassword() {
+  const current_password = document.getElementById("currentPasswordInput").value;
+  const new_password = document.getElementById("newPasswordInput").value;
+  const confirm_password = document.getElementById("confirmPasswordInput").value;
+
+  try {
+    const res = await fetch("/api/account/password", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({current_password, new_password, confirm_password})
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Password update failed");
+    setStatus("passwordStatus", "Password updated successfully.");
+    setTimeout(() => closeModal("#passwordModal"), 600);
+  } catch (err) {
+    setStatus("passwordStatus", err.message, true);
+  }
+}
+
+function openDangerModal() {
+  setStatus("dangerStatus", "");
+  openModal("#dangerModal");
+}
+
+async function deactivateAccount() {
+  if (!confirm("Deactivate your account?")) return;
+  try {
+    const res = await fetch("/api/account/deactivate", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed");
+    window.location.href = "{{ url_for('login') }}";
+  } catch (err) {
+    setStatus("dangerStatus", err.message, true);
+  }
+}
+
+async function deleteAccount() {
+  if (!confirm("Delete account permanently? This cannot be undone.")) return;
+  try {
+    const res = await fetch("/api/account/delete", { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed");
+    window.location.href = "{{ url_for('signup') }}";
+  } catch (err) {
+    setStatus("dangerStatus", err.message, true);
+  }
+}
+
+document.getElementById("accountInfoBtn").addEventListener("click", openAccountInfoModal);
+document.getElementById("changePasswordBtn").addEventListener("click", openPasswordModal);
+document.getElementById("profilePhotoBtn").addEventListener("click", openProfilePhotoModal);
+document.getElementById("profilePhotoInput").addEventListener("change", (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  initCropFromFile(file);
+});
+document.getElementById("profileCropZoom").addEventListener("input", (event) => {
+  if (!cropImage) return;
+  cropScale = parseFloat(event.target.value || "1");
+  clampCropOffsets();
+  drawCropCanvas();
+});
+document.getElementById("profileCropCanvas").addEventListener("mousedown", (event) => {
+  if (!cropImage) return;
+  const canvas = getCropCanvas();
+  cropDragging = true;
+  const pos = canvasPointerPosition(event, canvas);
+  cropDragStartX = pos.x;
+  cropDragStartY = pos.y;
+});
+window.addEventListener("mousemove", (event) => {
+  if (!cropDragging || !cropImage) return;
+  const canvas = getCropCanvas();
+  const pos = canvasPointerPosition(event, canvas);
+  const dx = pos.x - cropDragStartX;
+  const dy = pos.y - cropDragStartY;
+  cropDragStartX = pos.x;
+  cropDragStartY = pos.y;
+  cropOffsetX += dx;
+  cropOffsetY += dy;
+  clampCropOffsets();
+  drawCropCanvas();
+});
+window.addEventListener("mouseup", () => {
+  cropDragging = false;
+});
+document.getElementById("accountDangerBtn").addEventListener("click", openDangerModal);
+document.getElementById("appearanceBtn").addEventListener("click", () => openGeneralSettingModal("appearance"));
+document.getElementById("languageBtn").addEventListener("click", () => openGeneralSettingModal("language"));
+document.getElementById("fontBtn").addEventListener("click", () => openGeneralSettingModal("font_size"));
+document.getElementById("profileVisibilityBtn").addEventListener("click", () => openGeneralSettingModal("profile_visibility"));
+document.getElementById("directMessagesBtn").addEventListener("click", () => openGeneralSettingModal("direct_messages"));
+document.getElementById("blockedUsersBtn").addEventListener("click", openBlockedUsersModal);
+document.getElementById("blockUserBtn").addEventListener("click", blockSelectedUser);
+document.getElementById("saveAccountInfoBtn").addEventListener("click", saveAccountInfo);
+document.getElementById("savePasswordBtn").addEventListener("click", savePassword);
+document.getElementById("uploadProfilePhotoBtn").addEventListener("click", uploadProfilePhoto);
+document.getElementById("deactivateAccountBtn").addEventListener("click", deactivateAccount);
+document.getElementById("deleteAccountBtn").addEventListener("click", deleteAccount);
+
+document.querySelectorAll("[data-close]").forEach((btn) => {
+  btn.addEventListener("click", () => closeModal(btn.getAttribute("data-close")));
+});
+
+window.addEventListener("click", (event) => {
+  document.querySelectorAll(".account-modal-overlay").forEach((overlay) => {
+    if (event.target === overlay) overlay.style.display = "none";
+  });
+});
 </script>
 </body>
 </html>
+
+
+
+

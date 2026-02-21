@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SocialSync Inbox</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='inbox.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='user-preferences.css') }}">
+  <script src="{{ url_for('static', filename='user-preferences.js') }}" defer></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -15,14 +17,15 @@
         <img src="static/images/logo.png" alt="SocialSync Logo">
       </div>
       <ul class="menu">
-        <li>Home</li>
-        <li>Explore</li>
-        <li>Live</li>
-        <li>Trends</li>
+        <li><a href="{{ url_for('home') }}">Home</a></li>
+        <li><a href="{{ url_for('explore') }}">Explore</a></li>
+        <li><a href="{{ url_for('live') }}">Live</a></li>
+        <li><a href="{{ url_for('trends') }}">Trends</a></li>
         <li>Notifications</li>
+        <img class="avatar" src="static/images/pfp.jpg" alt="img">
       </ul>
     </div>
-    <div class="avatar"></div>
+
   </header>
 
   <div class="layout">
@@ -67,50 +70,332 @@
           <!-- LEFT MESSAGE LIST -->
           <div class="message-list">
             <div class="msg-header">
-              <button class="active">Primary</button>
-              <button>General</button>
+              <button class="active" id="primaryTabBtn">Primary</button>
+              <button id="newChatTabBtn">New chat</button>
             </div>
-
-            <div class="msg">
-              <img src="https://i.pravatar.cc/40?img=1" alt="">
-              <div>
-                <p class="name">John Doe</p>
-                <p class="text">Hey, how are you doing?</p>
-              </div>
-              <span class="time">5m</span>
-            </div>
-
-            <div class="msg">
-              <img src="https://i.pravatar.cc/40?img=2" alt="">
-              <div>
-                <p class="name">Jane Smith</p>
-                <p class="text">Reminder for the meeting tomorrow.</p>
-              </div>
-              <span class="time">10m</span>
-            </div>
-
-            <div class="msg">
-              <img src="https://i.pravatar.cc/40?img=3" alt="">
-              <div>
-                <p class="name">Team Updates</p>
-                <p class="text">Weekly report is ready.</p>
-              </div>
-              <span class="time">1h</span>
-            </div>
+            <div id="conversationList"></div>
           </div>
 
           <!-- RIGHT CHAT PREVIEW -->
-          <div class="chat-preview">
+          <div class="chat-preview" id="chatPreview">
             <div class="chat-icon">
               <i class="fa-regular fa-comment-dots"></i>
               <p>Your messages</p>
               <small>Send a message to start a chat.</small>
-              <button class="send-btn">Send message</button>
+              <button class="send-btn" id="sendMessageBtn">Send message</button>
             </div>
           </div>
         </div>
       </section>
     </main>
   </div>
+
+  <div class="modal-overlay" id="userModal">
+    <div class="user-modal-card">
+      <div class="user-modal-header">
+        <h3>Select user</h3>
+        <button class="close-btn" id="closeUserModal">&times;</button>
+      </div>
+      <div id="userList" class="user-list"></div>
+    </div>
+  </div>
+
+  <script>
+    let conversations = [];
+    let activeChatId = null;
+    const messagesByChat = {};
+    const currentUserId = {{ session.get('user_id', 0)|tojson }};
+
+    function avatarUrl(name) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1f6feb&color=ffffff`;
+    }
+
+    function escapeHtml(value) {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      };
+      return String(value).replace(/[&<>"']/g, (char) => map[char]);
+    }
+
+    function openUserModal() {
+      document.getElementById("userModal").style.display = "flex";
+      loadUsers();
+    }
+
+    function closeUserModal() {
+      document.getElementById("userModal").style.display = "none";
+    }
+
+    function formatConversationTime(timestamp) {
+      if (!timestamp) return "";
+      const date = new Date(timestamp.replace(" ", "T"));
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    async function loadConversations() {
+      const container = document.getElementById("conversationList");
+      container.innerHTML = "<p class='empty-list'>Loading chats...</p>";
+
+      try {
+        const res = await fetch("/api/inbox/conversations");
+        if (!res.ok) throw new Error("Failed");
+        const data = await res.json();
+        conversations = data.map((item) => ({
+          id: item.id,
+          username: item.username,
+          lastText: item.last_text || "No messages yet",
+          time: formatConversationTime(item.last_time)
+        }));
+      } catch (err) {
+        conversations = [];
+      }
+
+      renderConversationList();
+    }
+
+    async function loadUsers() {
+      const list = document.getElementById("userList");
+      list.innerHTML = "<p class='modal-note'>Loading users...</p>";
+
+      try {
+        const res = await fetch("/api/inbox/users");
+        if (!res.ok) throw new Error("Failed");
+        const users = await res.json();
+
+        if (!users.length) {
+          list.innerHTML = "<p class='modal-note'>No other users found.</p>";
+          return;
+        }
+
+        list.innerHTML = "";
+        users.forEach((user) => {
+          const button = document.createElement("button");
+          button.className = "user-row";
+          button.type = "button";
+          button.innerHTML = `
+            <img src="${avatarUrl(user.username)}" alt="${escapeHtml(user.username)}">
+            <span>${escapeHtml(user.username)}</span>
+          `;
+          button.addEventListener("click", () => startOrOpenChat(user.id, user.username));
+          list.appendChild(button);
+        });
+      } catch (err) {
+        list.innerHTML = "<p class='modal-note'>Could not load users.</p>";
+      }
+    }
+
+    function startOrOpenChat(userId, username) {
+      const existing = conversations.find(c => c.id === userId);
+      if (!existing) {
+        conversations.unshift({
+          id: userId,
+          username,
+          lastText: "No messages yet",
+          time: ""
+        });
+      }
+      activeChatId = userId;
+      closeUserModal();
+      renderConversationList();
+      renderChatPanel();
+      loadMessages(userId);
+    }
+
+    function openChat(userId) {
+      activeChatId = userId;
+      renderConversationList();
+      renderChatPanel();
+      loadMessages(userId);
+    }
+
+    function renderConversationList() {
+      const container = document.getElementById("conversationList");
+      if (!conversations.length) {
+        container.innerHTML = "<p class='empty-list'>No chats yet.</p>";
+        return;
+      }
+
+      container.innerHTML = conversations.map(c => `
+        <div class="msg ${activeChatId === c.id ? "selected" : ""}" onclick="openChat(${c.id})">
+          <img src="${avatarUrl(c.username)}" alt="${escapeHtml(c.username)}">
+          <div>
+            <p class="name">${escapeHtml(c.username)}</p>
+            <p class="text">${escapeHtml(c.lastText || "No messages yet")}</p>
+          </div>
+          <span class="time">${escapeHtml(c.time || "")}</span>
+        </div>
+      `).join("");
+    }
+
+    async function loadMessages(userId) {
+      try {
+        const res = await fetch(`/api/inbox/chats/${userId}/messages`);
+        if (!res.ok) throw new Error("Failed");
+        messagesByChat[userId] = await res.json();
+      } catch (err) {
+        messagesByChat[userId] = [];
+      }
+      if (activeChatId === userId) {
+        renderChatPanel();
+      }
+    }
+
+    function updateConversationPreview(userId, text) {
+      const index = conversations.findIndex(c => c.id === userId);
+      if (index < 0) return;
+
+      const convo = conversations[index];
+      convo.lastText = text;
+      convo.time = "now";
+      conversations.splice(index, 1);
+      conversations.unshift(convo);
+      renderConversationList();
+    }
+
+    async function sendMessage() {
+      if (!activeChatId) return;
+
+      const input = document.getElementById("chatInput");
+      const button = document.getElementById("sendChatBtn");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      button.disabled = true;
+
+      try {
+        const res = await fetch(`/api/inbox/chats/${activeChatId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: text })
+        });
+        const payload = await res.json();
+        if (!res.ok) throw new Error(payload.error || "Failed");
+
+        if (!messagesByChat[activeChatId]) messagesByChat[activeChatId] = [];
+        messagesByChat[activeChatId].push(payload.data);
+        input.value = "";
+        updateConversationPreview(activeChatId, payload.data.body);
+        renderChatPanel();
+      } catch (err) {
+        alert(err.message || "Could not send message.");
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function deleteActiveChat() {
+      if (!activeChatId) return;
+      if (!confirm("Delete this chat? All messages in this conversation will be removed.")) return;
+
+      try {
+        const res = await fetch(`/api/inbox/chats/${activeChatId}`, {
+          method: "DELETE"
+        });
+        const payload = await res.json();
+        if (!res.ok) throw new Error(payload.error || "Failed");
+
+        conversations = conversations.filter((chat) => chat.id !== activeChatId);
+        delete messagesByChat[activeChatId];
+        activeChatId = null;
+        renderConversationList();
+        renderChatPanel();
+      } catch (err) {
+        alert(err.message || "Could not delete chat.");
+      }
+    }
+
+    function renderMessageList(messages) {
+      if (!messages || !messages.length) {
+        return "<p class='empty-chat'>No messages yet. Say hi.</p>";
+      }
+
+      return messages.map((message) => {
+        const mine = message.sender_id === currentUserId;
+        return `
+          <div class="chat-row ${mine ? "outgoing" : "incoming"}">
+            <p class="chat-bubble ${mine ? "outgoing" : "incoming"}">${escapeHtml(message.body)}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderChatPanel() {
+      const panel = document.getElementById("chatPreview");
+      const active = conversations.find(c => c.id === activeChatId);
+
+      if (!active) {
+        panel.innerHTML = `
+          <div class="chat-icon">
+            <i class="fa-regular fa-comment-dots"></i>
+            <p>Your messages</p>
+            <small>Send a message to start a chat.</small>
+            <button class="send-btn" id="sendMessageBtn">Send message</button>
+          </div>
+        `;
+        document.getElementById("sendMessageBtn").addEventListener("click", openUserModal);
+        return;
+      }
+
+      panel.innerHTML = `
+        <div class="chat-window">
+          <div class="chat-window-header">
+            <div class="chat-user-meta">
+              <img src="${avatarUrl(active.username)}" alt="${escapeHtml(active.username)}">
+              <div>
+                <p>${escapeHtml(active.username)}</p>
+                <small>Online</small>
+              </div>
+            </div>
+            <button id="deleteChatBtn" class="delete-chat-btn" type="button" title="Delete chat" aria-label="Delete chat">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div class="chat-window-body" id="chatWindowBody">
+            ${renderMessageList(messagesByChat[active.id])}
+          </div>
+          <div class="chat-compose">
+            <input id="chatInput" type="text" placeholder="Type a message..." maxlength="2000" />
+            <button id="sendChatBtn" type="button">Send</button>
+          </div>
+        </div>
+      `;
+
+      const input = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendChatBtn");
+      const deleteBtn = document.getElementById("deleteChatBtn");
+      sendBtn.addEventListener("click", sendMessage);
+      deleteBtn.addEventListener("click", deleteActiveChat);
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+
+      const body = document.getElementById("chatWindowBody");
+      body.scrollTop = body.scrollHeight;
+    }
+
+    document.getElementById("sendMessageBtn").addEventListener("click", openUserModal);
+    document.getElementById("newChatTabBtn").addEventListener("click", openUserModal);
+    document.getElementById("closeUserModal").addEventListener("click", closeUserModal);
+    window.addEventListener("click", (e) => {
+      if (e.target === document.getElementById("userModal")) {
+        closeUserModal();
+      }
+    });
+
+    loadConversations();
+  </script>
 </body>
 </html>
+
+
+
+
