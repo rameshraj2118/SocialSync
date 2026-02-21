@@ -10,7 +10,7 @@ import urllib.parse
 import urllib.request
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY")  # Change this to something secure!
+app.secret_key = "Qwe123!@#"  # Change this to something secure!
 
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
