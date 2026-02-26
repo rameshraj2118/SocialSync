@@ -72,9 +72,7 @@
         <div class="divider">────────  or Sign up with  ────────</div>
 
         <div class="social-login">
-          <button type="button" class="social-btn"><i class="fab fa-google"></i> Google</button>
-          <button type="button" class="social-btn"><i class="fab fa-apple"></i> Apple</button>
-          <button type="button" class="social-btn"><i class="fab fa-facebook-f"></i> Facebook</button>
+          <button type="button" class="social-btn" onclick="window.location.href='{{ url_for('oauth_google_start') }}'"><i class="fab fa-google"></i> Google</button>
         </div>
       </form>
     </div>

@@ -1,0 +1,15 @@
+# Secrets
+.env
+*.env
+flask/.env
+
+# Python cache/build
+__pycache__/
+*.py[cod]
+
+# Local database
+users.db
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

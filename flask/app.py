@@ -6,12 +6,35 @@ import random
 import os
 import time
 import json
+import secrets
 import urllib.parse
 import urllib.request
 import urllib.error
 
+
+def load_local_env():
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    if not os.path.exists(env_path):
+        return
+    try:
+        with open(env_path, "r", encoding="utf-8") as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key:
+                    os.environ.setdefault(key, value)
+    except OSError:
+        return
+
+
+load_local_env()
+
 app = Flask(__name__)
-app.secret_key = "Qwe123!@#"  # Change this to something secure!
+app.secret_key = (os.environ.get("SECRET_KEY") or "Qwe123!@#").strip()  # Use env in production
 
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -127,6 +150,29 @@ def init_db():
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
         ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at INTEGER NOT NULL,
+            used_at INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS oauth_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            provider TEXT NOT NULL,
+            provider_user_id TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(provider, provider_user_id),
+            UNIQUE(user_id, provider),
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+        ''')
     conn.commit()
     conn.close()
 
@@ -212,6 +258,151 @@ def fetch_trending_creators():
         return get_fallback_creators()
     return creators
 
+
+def create_password_reset_token(user_id):
+    token = secrets.token_urlsafe(32)
+    expires_at = int(time.time()) + (30 * 60)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM password_resets WHERE user_id=? OR expires_at < ?",
+        (user_id, int(time.time()))
+    )
+    cursor.execute(
+        """
+        INSERT INTO password_resets (user_id, token, expires_at)
+        VALUES (?, ?, ?)
+        """,
+        (user_id, token, expires_at)
+    )
+    conn.commit()
+    conn.close()
+    return token
+
+
+def get_password_reset_record(token):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, user_id, expires_at, used_at
+        FROM password_resets
+        WHERE token=?
+        LIMIT 1
+        """,
+        (token,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return row
+
+
+def _oauth_post_form(url, payload, timeout=20):
+    data = urllib.parse.urlencode(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST"
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _oauth_get_json(url, timeout=20):
+    req = urllib.request.Request(url, method="GET")
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _finalize_user_session(user_id, username, email):
+    session.clear()
+    session["user_id"] = user_id
+    session["username"] = username
+    session["handle"] = (email or username).split("@")[0]
+
+
+def _oauth_login_or_create_user(provider, provider_user_id, email, display_name, avatar_url=""):
+    provider = (provider or "").strip().lower()
+    provider_user_id = str(provider_user_id or "").strip()
+    email = (email or "").strip().lower()
+    display_name = (display_name or "").strip()
+
+    if not provider or not provider_user_id:
+        return None, "Invalid OAuth identity"
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT u.id, u.username, u.email, u.is_active
+        FROM oauth_accounts oa
+        JOIN users u ON u.id = oa.user_id
+        WHERE oa.provider=? AND oa.provider_user_id=?
+        LIMIT 1
+        """,
+        (provider, provider_user_id)
+    )
+    linked = cursor.fetchone()
+    if linked:
+        conn.close()
+        if int(linked[3]) == 0:
+            return None, "This account is deactivated. Contact support to reactivate."
+        return {"id": linked[0], "username": linked[1], "email": linked[2]}, None
+
+    user = None
+    if email:
+        cursor.execute(
+            "SELECT id, username, email, is_active FROM users WHERE email=? LIMIT 1",
+            (email,)
+        )
+        user = cursor.fetchone()
+
+    if user and int(user[3]) == 0:
+        conn.close()
+        return None, "This account is deactivated. Contact support to reactivate."
+
+    if user:
+        user_id = user[0]
+    else:
+        base_username = display_name or (email.split("@")[0] if email else f"{provider}_{provider_user_id[:8]}")
+        base_username = "".join(ch for ch in base_username if ch.isalnum() or ch in ("_", "-")).strip() or f"{provider}_user"
+        username = base_username[:28]
+        if not email:
+            email = f"{provider}_{provider_user_id}@socialsync.local"
+
+        cursor.execute(
+            "INSERT INTO users (username, email, password, profile_image) VALUES (?, ?, ?, ?)",
+            (username, email, generate_password_hash(secrets.token_urlsafe(32)), avatar_url or "")
+        )
+        user_id = cursor.lastrowid
+
+    try:
+        cursor.execute(
+            """
+            INSERT INTO oauth_accounts (user_id, provider, provider_user_id)
+            VALUES (?, ?, ?)
+            """,
+            (user_id, provider, provider_user_id)
+        )
+    except sqlite3.IntegrityError:
+        pass
+
+    cursor.execute(
+        "SELECT id, username, email, is_active FROM users WHERE id=? LIMIT 1",
+        (user_id,)
+    )
+    final_user = cursor.fetchone()
+    conn.commit()
+    conn.close()
+
+    if not final_user:
+        return None, "Unable to complete OAuth sign-in."
+    if int(final_user[3]) == 0:
+        return None, "This account is deactivated. Contact support to reactivate."
+    return {"id": final_user[0], "username": final_user[1], "email": final_user[2]}, None
+
 # --- Routes ---
 @app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
@@ -271,6 +462,91 @@ def signup():
             conn.close()
 
     return render_template('signup.html')
+
+
+@app.route('/auth/google/start')
+def oauth_google_start():
+    client_id = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+    if not client_id:
+        flash("Google OAuth is not configured on server.", "danger")
+        return redirect(url_for('login'))
+
+    state = secrets.token_urlsafe(24)
+    session["oauth_google_state"] = state
+    redirect_uri = (os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or "").strip()
+    if not redirect_uri:
+        redirect_uri = request.url_root.rstrip("/") + url_for("oauth_google_callback")
+
+    params = {
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "prompt": "select_account"
+    }
+    auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(params)
+    return redirect(auth_url)
+
+
+@app.route('/auth/google/callback')
+def oauth_google_callback():
+    expected_state = session.pop("oauth_google_state", "")
+    received_state = (request.args.get("state") or "").strip()
+    if not expected_state or expected_state != received_state:
+        flash("Google sign-in failed: invalid state.", "danger")
+        return redirect(url_for('login'))
+
+    code = (request.args.get("code") or "").strip()
+    if not code:
+        flash("Google sign-in failed: missing authorization code.", "danger")
+        return redirect(url_for('login'))
+
+    client_id = (os.environ.get("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+    client_secret = (os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
+    redirect_uri = (os.environ.get("GOOGLE_OAUTH_REDIRECT_URI") or "").strip()
+    if not redirect_uri:
+        redirect_uri = request.url_root.rstrip("/") + url_for("oauth_google_callback")
+
+    if not client_id or not client_secret:
+        flash("Google OAuth is not configured on server.", "danger")
+        return redirect(url_for('login'))
+
+    try:
+        token_data = _oauth_post_form(
+            "https://oauth2.googleapis.com/token",
+            {
+                "code": code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code"
+            }
+        )
+        access_token = token_data.get("access_token")
+        if not access_token:
+            flash("Google sign-in failed: no access token.", "danger")
+            return redirect(url_for('login'))
+
+        user_info = _oauth_get_json(
+            "https://www.googleapis.com/oauth2/v3/userinfo?"
+            + urllib.parse.urlencode({"access_token": access_token})
+        )
+        provider_user_id = user_info.get("sub")
+        email = user_info.get("email") or ""
+        name = user_info.get("name") or ""
+        picture = user_info.get("picture") or ""
+
+        user, error = _oauth_login_or_create_user("google", provider_user_id, email, name, picture)
+        if error:
+            flash(error, "danger")
+            return redirect(url_for('login'))
+
+        _finalize_user_session(user["id"], user["username"], user["email"])
+        return redirect(url_for('home'))
+    except Exception:
+        flash("Google sign-in failed. Check OAuth credentials and callback URL.", "danger")
+        return redirect(url_for('login'))
 
 
 @app.route('/about')
@@ -2078,22 +2354,79 @@ def logout():
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form['email']
+        email = (request.form.get('email') or '').strip().lower()
+        reset_link = None
 
-        conn = sqlite3.connect('users.db')
+        conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
+        cursor.execute("SELECT id FROM users WHERE email=?", (email,))
         user = cursor.fetchone()
         conn.close()
 
         if user:
-            flash("Password reset link sent to your email (feature under development).", "success")
+            token = create_password_reset_token(user[0])
+            reset_link = url_for('reset_password', token=token, _external=True)
+            flash("Password reset link generated successfully.", "success")
         else:
             flash("No account found with that email.", "danger")
 
-        return redirect(url_for('forgot_password'))
+        return render_template('forgot_password.html', reset_link=reset_link)
 
     return render_template('forgot_password.html')
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    record = get_password_reset_record(token)
+    now_ts = int(time.time())
+
+    if not record:
+        flash("Invalid reset link.", "danger")
+        return redirect(url_for('forgot_password'))
+
+    reset_id, user_id, expires_at, used_at = record
+
+    if used_at:
+        flash("This reset link has already been used.", "danger")
+        return redirect(url_for('forgot_password'))
+
+    if int(expires_at) < now_ts:
+        flash("This reset link has expired. Please request a new one.", "danger")
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('new_password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
+
+        if len(new_password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+            return render_template('reset_password.html', token=token)
+
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template('reset_password.html', token=token)
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET password=? WHERE id=?",
+            (generate_password_hash(new_password), user_id)
+        )
+        cursor.execute(
+            "UPDATE password_resets SET used_at=? WHERE id=?",
+            (now_ts, reset_id)
+        )
+        cursor.execute(
+            "DELETE FROM password_resets WHERE user_id=? AND id != ?",
+            (user_id, reset_id)
+        )
+        conn.commit()
+        conn.close()
+
+        flash("Password reset successful. Please log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
 
 
 if __name__ == "__main__":
