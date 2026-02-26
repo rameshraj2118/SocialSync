@@ -8,6 +8,7 @@ import time
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 
 app = Flask(__name__)
 app.secret_key = "Qwe123!@#"  # Change this to something secure!
@@ -94,11 +95,18 @@ def init_db():
             sender_id INTEGER NOT NULL,
             receiver_id INTEGER NOT NULL,
             body TEXT NOT NULL,
+            is_read INTEGER NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(sender_id) REFERENCES users(id),
             FOREIGN KEY(receiver_id) REFERENCES users(id)
         )
         ''')
+    cursor.execute("PRAGMA table_info(messages)")
+    message_columns = [row[1] for row in cursor.fetchall()]
+    if "is_read" not in message_columns:
+        cursor.execute(
+            "ALTER TABLE messages ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0"
+        )
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS blocked_users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1329,6 +1337,246 @@ def get_notifications():
     return jsonify({"items": items, "disabled": False})
 
 
+@app.route("/api/ai/chat", methods=["POST"])
+def ai_chat():
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    message = (data.get("message") or "").strip()
+    history = data.get("history") or []
+
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    api_key = (os.environ.get("GOOGLE_API_KEY") or "").strip()
+    if not api_key:
+        return jsonify({
+            "error": "Google AI key missing. Set GOOGLE_API_KEY in environment."
+        }), 500
+
+    model = (os.environ.get("GOOGLE_AI_MODEL") or "gemini-2.0-flash").strip()
+    if model.startswith("models/"):
+        model = model.split("/", 1)[1]
+
+    def parse_google_error(error_body):
+        if not error_body:
+            return None, None, None
+        try:
+            payload = json.loads(error_body)
+        except Exception:
+            return None, None, None
+        error_obj = payload.get("error") or {}
+        message = error_obj.get("message")
+        status = error_obj.get("status")
+        retry_after = None
+        for detail in error_obj.get("details") or []:
+            if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
+                retry_after = detail.get("retryDelay")
+                break
+        return message, status, retry_after
+
+    def list_supported_models():
+        list_url = (
+            "https://generativelanguage.googleapis.com/v1beta/models"
+            f"?key={urllib.parse.quote(api_key)}"
+        )
+        list_req = urllib.request.Request(
+            list_url,
+            headers={"Content-Type": "application/json"},
+            method="GET"
+        )
+        with urllib.request.urlopen(list_req, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        models = payload.get("models") or []
+        return [
+            (m.get("name") or "").split("/", 1)[-1]
+            for m in models
+            if "generateContent" in (m.get("supportedGenerationMethods") or [])
+        ]
+
+    contents = []
+    for item in history[-10:]:
+        role = "model" if str(item.get("role")) == "assistant" else "user"
+        text = str(item.get("content") or "").strip()
+        if text:
+            contents.append({
+                "role": role,
+                "parts": [{"text": text}]
+            })
+    contents.append({
+        "role": "user",
+        "parts": [{"text": message}]
+    })
+
+    max_output_tokens_raw = (os.environ.get("GOOGLE_AI_MAX_OUTPUT_TOKENS") or "").strip()
+    try:
+        max_output_tokens = int(max_output_tokens_raw) if max_output_tokens_raw else 1536
+    except ValueError:
+        max_output_tokens = 1536
+    max_output_tokens = max(256, min(max_output_tokens, 4096))
+
+    payload = json.dumps({
+        "systemInstruction": {
+            "parts": [{
+                "text": (
+                    "Give complete, clear answers. "
+                    "Use multiple sentences and include useful detail when appropriate."
+                )
+            }]
+        },
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": max_output_tokens
+        }
+    }).encode("utf-8")
+
+    preferred_fallbacks = [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro"
+    ]
+
+    model_candidates = [model]
+    for candidate in preferred_fallbacks:
+        if candidate not in model_candidates:
+            model_candidates.append(candidate)
+
+    result = None
+    used_model = None
+    last_error = None
+    available_models = []
+    quota_exceeded = False
+    retry_after_delay = None
+
+    for candidate_model in model_candidates:
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{urllib.parse.quote(candidate_model)}:generateContent?key={urllib.parse.quote(api_key)}"
+        )
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST"
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=25) as response:
+                raw = response.read().decode("utf-8")
+            result = json.loads(raw)
+            used_model = candidate_model
+            break
+        except urllib.error.HTTPError as err:
+            error_body = ""
+            try:
+                error_body = err.read().decode("utf-8")
+            except Exception:
+                error_body = ""
+            google_message, google_status, google_retry_after = parse_google_error(error_body)
+            if err.code == 404:
+                last_error = error_body or str(err)
+                continue
+            if err.code == 429 or google_status == "RESOURCE_EXHAUSTED":
+                quota_exceeded = True
+                retry_after_delay = google_retry_after or retry_after_delay
+                last_error = google_message or error_body or str(err)
+                continue
+            return jsonify({
+                "error": "Google AI request failed",
+                "details": error_body or str(err)
+            }), 502
+        except urllib.error.URLError as err:
+            return jsonify({
+                "error": "Google AI is unreachable",
+                "details": str(err)
+            }), 502
+        except Exception as err:
+            return jsonify({
+                "error": "Could not process AI response",
+                "details": str(err)
+            }), 500
+
+    if result is None:
+        try:
+            available_models = list_supported_models()
+        except Exception:
+            available_models = []
+
+    if result is None and available_models:
+        for listed_model in available_models:
+            if listed_model in model_candidates:
+                continue
+            url = (
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{urllib.parse.quote(listed_model)}:generateContent?key={urllib.parse.quote(api_key)}"
+            )
+            req = urllib.request.Request(
+                url,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=25) as response:
+                    raw = response.read().decode("utf-8")
+                result = json.loads(raw)
+                used_model = listed_model
+                break
+            except urllib.error.HTTPError as err:
+                if err.code == 429:
+                    quota_exceeded = True
+                    try:
+                        body = err.read().decode("utf-8")
+                    except Exception:
+                        body = ""
+                    google_message, _, google_retry_after = parse_google_error(body)
+                    retry_after_delay = google_retry_after or retry_after_delay
+                    last_error = google_message or body or str(err)
+                    continue
+                last_error = str(err)
+                continue
+            except Exception as err:
+                last_error = str(err)
+                continue
+
+    if result is None and quota_exceeded:
+        response = jsonify({
+            "error": "Google AI quota exceeded",
+            "details": (
+                (last_error or "Quota exhausted for the configured API key/project.")
+                + " Check API key project, billing plan, and Gemini rate limits."
+            ),
+            "retry_after": retry_after_delay or ""
+        })
+        if retry_after_delay:
+            response.headers["Retry-After"] = retry_after_delay.rstrip("s")
+        return response, 429
+
+    if result is None:
+        available_preview = ", ".join(available_models[:8]) if available_models else "none"
+        return jsonify({
+            "error": "Google AI request failed",
+            "details": (
+                (last_error or "No working model found")
+                + f" | Available generateContent models: {available_preview}"
+            )
+        }), 502
+
+    candidates = result.get("candidates") or []
+    if not candidates:
+        return jsonify({"error": "No response from Google AI"}), 502
+
+    parts = ((candidates[0].get("content") or {}).get("parts") or [])
+    reply = "".join(str(part.get("text") or "") for part in parts).strip()
+    if not reply:
+        reply = "I could not generate a response right now."
+
+    return jsonify({"reply": reply, "model": used_model or model})
+
+
 @app.route("/api/inbox/users")
 def inbox_users():
     if "user_id" not in session:
@@ -1373,7 +1621,14 @@ def inbox_conversations():
             u.id,
             u.username,
             m.body,
-            m.created_at
+            m.created_at,
+            (
+                SELECT COUNT(*)
+                FROM messages m3
+                WHERE m3.sender_id = u.id
+                  AND m3.receiver_id = ?
+                  AND m3.is_read = 0
+            ) AS unread_count
         FROM users u
         JOIN messages m
             ON (
@@ -1408,6 +1663,7 @@ def inbox_conversations():
             session["user_id"],
             session["user_id"],
             session["user_id"],
+            session["user_id"],
             session["user_id"]
         )
     )
@@ -1419,7 +1675,8 @@ def inbox_conversations():
             "id": row[0],
             "username": row[1],
             "last_text": row[2],
-            "last_time": row[3]
+            "last_time": row[3],
+            "unread_count": int(row[4] or 0)
         }
         for row in rows
     ])
@@ -1463,6 +1720,17 @@ def get_chat_messages(other_user_id):
 
     cursor.execute(
         """
+        UPDATE messages
+        SET is_read = 1
+        WHERE sender_id = ?
+          AND receiver_id = ?
+          AND is_read = 0
+        """,
+        (other_user_id, session["user_id"])
+    )
+
+    cursor.execute(
+        """
         SELECT id, sender_id, receiver_id, body, created_at
         FROM messages
         WHERE
@@ -1474,6 +1742,7 @@ def get_chat_messages(other_user_id):
         (session["user_id"], other_user_id, other_user_id, session["user_id"])
     )
     rows = cursor.fetchall()
+    conn.commit()
     conn.close()
 
     return jsonify([
@@ -1534,8 +1803,8 @@ def send_chat_message(other_user_id):
 
     cursor.execute(
         """
-        INSERT INTO messages (sender_id, receiver_id, body)
-        VALUES (?, ?, ?)
+        INSERT INTO messages (sender_id, receiver_id, body, is_read)
+        VALUES (?, ?, ?, 0)
         """,
         (session["user_id"], other_user_id, body)
     )

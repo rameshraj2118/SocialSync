@@ -149,7 +149,8 @@
           id: item.id,
           username: item.username,
           lastText: item.last_text || "No messages yet",
-          time: formatConversationTime(item.last_time)
+          time: formatConversationTime(item.last_time),
+          unreadCount: Number(item.unread_count) || 0
         }));
       } catch (err) {
         conversations = [];
@@ -189,28 +190,31 @@
       }
     }
 
-    function startOrOpenChat(userId, username) {
+    async function startOrOpenChat(userId, username) {
       const existing = conversations.find(c => c.id === userId);
       if (!existing) {
         conversations.unshift({
           id: userId,
           username,
           lastText: "No messages yet",
-          time: ""
+          time: "",
+          unreadCount: 0
         });
       }
       activeChatId = userId;
       closeUserModal();
       renderConversationList();
       renderChatPanel();
-      loadMessages(userId);
+      await loadMessages(userId, true);
     }
 
-    function openChat(userId) {
+    async function openChat(userId) {
       activeChatId = userId;
+      const active = conversations.find(c => c.id === userId);
+      if (active) active.unreadCount = 0;
       renderConversationList();
       renderChatPanel();
-      loadMessages(userId);
+      await loadMessages(userId, true);
     }
 
     function renderConversationList() {
@@ -223,16 +227,19 @@
       container.innerHTML = conversations.map(c => `
         <div class="msg ${activeChatId === c.id ? "selected" : ""}" onclick="openChat(${c.id})">
           <img src="${avatarUrl(c.username)}" alt="${escapeHtml(c.username)}">
-          <div>
+          <div class="msg-main">
             <p class="name">${escapeHtml(c.username)}</p>
             <p class="text">${escapeHtml(c.lastText || "No messages yet")}</p>
           </div>
-          <span class="time">${escapeHtml(c.time || "")}</span>
+          <div class="msg-meta">
+            <span class="time">${escapeHtml(c.time || "")}</span>
+            ${c.unreadCount ? `<span class="chat-unread-badge">${c.unreadCount > 99 ? "99+" : c.unreadCount}</span>` : ""}
+          </div>
         </div>
       `).join("");
     }
 
-    async function loadMessages(userId) {
+    async function loadMessages(userId, markAsRead = false) {
       try {
         const res = await fetch(`/api/inbox/chats/${userId}/messages`);
         if (!res.ok) throw new Error("Failed");
@@ -241,6 +248,11 @@
         messagesByChat[userId] = [];
       }
       if (activeChatId === userId) {
+        if (markAsRead) {
+          const active = conversations.find(c => c.id === userId);
+          if (active) active.unreadCount = 0;
+          renderConversationList();
+        }
         renderChatPanel();
       }
     }
@@ -392,6 +404,7 @@
     });
 
     loadConversations();
+    setInterval(loadConversations, 15000);
   </script>
 </body>
 </html>
